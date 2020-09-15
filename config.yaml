@@ -1,0 +1,7 @@
+etcd:
+    endpoint   : [http://10.1.1.224:2379]
+    path_prefix : /coredns
+    username: NULL
+    passwrod: NULL
+    timeout: 5
+
