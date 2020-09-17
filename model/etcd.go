@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"net"
 	"strings"
 )
@@ -32,16 +33,16 @@ type Etcd struct {
 }
 
 // HostType returns the DNS type of what is encoded in the Etcd Host field.
-func (e *Etcd) HostType() (what Type) {
+func (e Etcd) HostType() Type {
 
 	if e.Mail {
 		return TypeMX
 	}
-	keyParts := strings.Split(e.Key, "/")
+	keyParts := strings.Split(strings.Trim(e.Key, "/"), "/")
 	if strings.Join(keyParts[1:3], "/") == "arpa/in-addr" {
 		return TypePTR
 	}
-	if strings.Join(keyParts[len(keyParts)-2:len(keyParts)], "/") == "dns/ns" {
+	if strings.Join(keyParts[len(keyParts)-2:], "/") == "dns/ns" {
 		return TypeNS
 	}
 	ip := net.ParseIP(e.Host)
@@ -63,4 +64,43 @@ func (e *Etcd) HostType() (what Type) {
 	}
 	// This should never be reached.
 	return TypeNone
+}
+
+//ToRecord   Conversion to Record
+func (e Etcd) ToRecord() *Record {
+	r := &Record{
+		TTL:      e.TTL,
+		Priority: e.Priority,
+	}
+	keyParts := strings.Split(strings.Trim(e.Key, "/"), "/")
+	r.Path = keyParts[0]
+	tp := e.HostType()
+	switch tp {
+	case TypeA, TypeAAAA, TypeCNAME, TypeMX, TypeTXT, TypeSRV, TypePTR:
+		r.Type = tp
+		n := 1
+		if tp == TypePTR {
+			n = 3
+		}
+		for i, j := n, len(keyParts)-1; i < j; i, j = i+1, j-1 {
+			keyParts[i], keyParts[j] = keyParts[j], keyParts[i]
+		}
+		r.Name = strings.Join(keyParts[n:], ".")
+
+	//ns not suport
+	case TypeNS:
+		return nil
+
+	}
+	switch tp {
+	case TypeA, TypeAAAA, TypeCNAME, TypeMX, TypePTR:
+		r.Content = e.Host
+	case TypeTXT:
+		r.Content = e.Text
+	case TypeSRV:
+		r.Content = fmt.Sprintf("%d %d %d %s", e.Priority, e.Weight, e.Port, e.Host)
+	}
+
+	return r
+
 }

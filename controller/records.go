@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,22 +17,24 @@ var conf = config.Get()
 func GetRecords(c *gin.Context) {
 
 	ex, err := service.GetAllEtcdItems(conf.Etcd.PathPrefix)
+	log.Println("len(ex): ", len(ex))
 	if err != nil {
+		log.Println("err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"msg": err.Error(),
 		})
 		return
 	}
-	data := []model.Record{}
+	data := []*model.Record{}
 	for _, e := range ex {
-		record := model.Record{}
-		switch e.HostType() {
-		case model.TypeA:
-
+		r := e.ToRecord()
+		if r == nil {
+			continue
 		}
+		data = append(data, r)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"msg":  "success",
-		"data": ex,
+		"data": data,
 	})
 }

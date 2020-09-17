@@ -1,7 +1,7 @@
 package config
 
 const (
-	defaultEndpoint    = "http://localhost:2379"
+	defaultEndpoint    = "http://10.1.1.224:2379"
 	defaultPathPrefix  = "/coredns"
 	defaultEtcdTimeout = 5
 	defaultHost        = ""

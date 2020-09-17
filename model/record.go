@@ -1,6 +1,10 @@
 package model
 
-import "errors"
+import (
+	"bytes"
+	"errors"
+	"fmt"
+)
 
 // Type is a DNS type.
 type Type uint16
@@ -23,11 +27,11 @@ func (t Type) String() string {
 
 	switch t {
 	case TypeA:
-		enumVal = "a"
+		enumVal = "A"
 	case TypeCNAME:
-		enumVal = "cname"
+		enumVal = "CNAME"
 	case TypePTR:
-		enumVal = "ptr"
+		enumVal = "PTR"
 	case TypeMX:
 		enumVal = "mx"
 	case TypeTXT:
@@ -38,36 +42,37 @@ func (t Type) String() string {
 		enumVal = "srv"
 	}
 
-	return enumVal
+	return fmt.Sprintf(`"%s"`, enumVal)
 }
 
 // MarshalJSON marshals Type into json.
-func (t *Type) MarshalJSON() ([]byte, error) {
+func (t Type) MarshalJSON() ([]byte, error) {
 	return []byte(t.String()), nil
 }
 
 // UnmarshalJSON unmarshals Level from json.
 func (t *Type) UnmarshalJSON(b []byte) error {
-	switch string(b) {
-	case "a":
+
+	switch string(bytes.Trim(b, `"`)) {
+	case "A":
 		*t = TypeA
 
-	case "cname":
+	case "CAME":
 		*t = TypeCNAME
 
-	case "ptr":
+	case "PTR":
 		*t = TypePTR
 
-	case "mx":
+	case "MX":
 		*t = TypeMX
 
-	case "txt":
+	case "TXT":
 		*t = TypeTXT
 
-	case "aaa":
+	case "AAA":
 		*t = TypeAAAA
 
-	case "srv":
+	case "SRV":
 		*t = TypeSRV
 
 	default:
@@ -77,11 +82,12 @@ func (t *Type) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-//Record   api data model
+//Record api data model
 type Record struct {
 	Type     Type   `json:"type"`
 	TTL      uint32 `json:"ttl,omitempty"`
 	Priority int    `json:"priority,omitempty"`
 	Name     string `json:"name"`
-	Content  string `json:"content,omitempty"`
+	Content  string `json:"content"`
+	Path     string `json:"-"`
 }

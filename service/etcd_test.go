@@ -6,7 +6,7 @@ import (
 	"github.com/kexirong/coredns-admin/config"
 )
 
-func TestGet(t *testing.T) {
+func TestGetAllEtcdItems(t *testing.T) {
 	var err error
 	err = InitEtcdClient(*config.Get())
 	if err != nil {
