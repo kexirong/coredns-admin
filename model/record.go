@@ -28,18 +28,20 @@ func (t Type) String() string {
 	switch t {
 	case TypeA:
 		enumVal = "A"
+	case TypeNS:
+		enumVal = "NS"
 	case TypeCNAME:
 		enumVal = "CNAME"
 	case TypePTR:
 		enumVal = "PTR"
 	case TypeMX:
-		enumVal = "mx"
+		enumVal = "MX"
 	case TypeTXT:
-		enumVal = "txt"
+		enumVal = "TXT"
 	case TypeAAAA:
-		enumVal = "aaa"
+		enumVal = "AAA"
 	case TypeSRV:
-		enumVal = "srv"
+		enumVal = "SRV"
 	}
 
 	return fmt.Sprintf(`"%s"`, enumVal)
@@ -57,7 +59,10 @@ func (t *Type) UnmarshalJSON(b []byte) error {
 	case "A":
 		*t = TypeA
 
-	case "CAME":
+	case "NS":
+		*t = TypeNS
+
+	case "CNAME":
 		*t = TypeCNAME
 
 	case "PTR":
@@ -89,5 +94,6 @@ type Record struct {
 	Priority int    `json:"priority,omitempty"`
 	Name     string `json:"name"`
 	Content  string `json:"content"`
+	Key      string `json:"key,omitempty"`
 	Path     string `json:"-"`
 }

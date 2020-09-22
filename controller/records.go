@@ -28,7 +28,64 @@ func GetRecords(c *gin.Context) {
 	data := []*model.Record{}
 	for _, e := range ex {
 		r := e.ToRecord()
-		if r == nil {
+		if r == nil || "/"+r.Path != conf.Etcd.PathPrefix {
+			continue
+		}
+		data = append(data, r)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"msg":  "success",
+		"data": data,
+	})
+}
+func PostRecords(c *gin.Context) {
+	var rec model.Record
+	if c.ShouldBindJSON(&rec) != nil {
+		log.Printf("%+v\n", rec)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"msg": "success",
+	})
+}
+func PutRecords(c *gin.Context) {
+
+	ex, err := service.GetAllEtcdItems(conf.Etcd.PathPrefix)
+
+	if err != nil {
+		log.Println("err: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg": err.Error(),
+		})
+		return
+	}
+	data := []*model.Record{}
+	for _, e := range ex {
+		r := e.ToRecord()
+		if r == nil || "/"+r.Path != conf.Etcd.PathPrefix {
+			continue
+		}
+		data = append(data, r)
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"msg":  "success",
+		"data": data,
+	})
+}
+func DeleteRecords(c *gin.Context) {
+
+	ex, err := service.GetAllEtcdItems(conf.Etcd.PathPrefix)
+
+	if err != nil {
+		log.Println("err: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg": err.Error(),
+		})
+		return
+	}
+	data := []*model.Record{}
+	for _, e := range ex {
+		r := e.ToRecord()
+		if r == nil || "/"+r.Path != conf.Etcd.PathPrefix {
 			continue
 		}
 		data = append(data, r)

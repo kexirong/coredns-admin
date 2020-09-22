@@ -6,7 +6,7 @@ import (
 )
 
 func TestRecordMarshalJSON(t *testing.T) {
-	r := Record{TypeA, 10, 12, "test", "1.1.1.1", "/core"}
+	r := Record{TypeA, 10, 12, "test", "1.1.1.1", "/core.com.test", "core"}
 	_, err := json.Marshal(r)
 	if err != nil {
 		t.Fatal(err)

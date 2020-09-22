@@ -8,6 +8,7 @@ import (
 func init() {
 	Router.Use(middleware.Cors())
 
-	var v1 = Router.Group("/v1")
+	var v1 = Router.Group("/api/v1")
 	v1.GET("/records", controller.GetRecords)
+	v1.POST("/records", controller.PostRecords)
 }

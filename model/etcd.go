@@ -71,6 +71,7 @@ func (e Etcd) ToRecord() *Record {
 	r := &Record{
 		TTL:      e.TTL,
 		Priority: e.Priority,
+		Key:      e.Key,
 	}
 	keyParts := strings.Split(strings.Trim(e.Key, "/"), "/")
 	if len(keyParts) < 2 {
