@@ -73,7 +73,15 @@ func (e Etcd) ToRecord() *Record {
 		Priority: e.Priority,
 	}
 	keyParts := strings.Split(strings.Trim(e.Key, "/"), "/")
+	if len(keyParts) < 2 {
+		return nil
+	}
 	r.Path = keyParts[0]
+
+	if keyParts[len(keyParts)-1][0] == '#' {
+		keyParts = keyParts[:len(keyParts)-1]
+	}
+
 	tp := e.HostType()
 	switch tp {
 	case TypeA, TypeAAAA, TypeCNAME, TypeMX, TypeTXT, TypeSRV, TypePTR:
@@ -85,6 +93,7 @@ func (e Etcd) ToRecord() *Record {
 		for i, j := n, len(keyParts)-1; i < j; i, j = i+1, j-1 {
 			keyParts[i], keyParts[j] = keyParts[j], keyParts[i]
 		}
+
 		r.Name = strings.Join(keyParts[n:], ".")
 
 	//ns not suport

@@ -17,7 +17,7 @@ var conf = config.Get()
 func GetRecords(c *gin.Context) {
 
 	ex, err := service.GetAllEtcdItems(conf.Etcd.PathPrefix)
-	log.Println("len(ex): ", len(ex))
+
 	if err != nil {
 		log.Println("err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{

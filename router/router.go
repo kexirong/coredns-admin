@@ -2,4 +2,4 @@ package router
 
 import "github.com/gin-gonic/gin"
 
-var router = gin.Default()
+var Router = gin.Default()
