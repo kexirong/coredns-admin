@@ -100,7 +100,6 @@ func (e Etcd) ToRecord() *Record {
 	//ns not suport
 	case TypeNS:
 		return nil
-
 	}
 	switch tp {
 	case TypeA, TypeAAAA, TypeCNAME, TypeMX, TypePTR:
@@ -108,7 +107,7 @@ func (e Etcd) ToRecord() *Record {
 	case TypeTXT:
 		r.Content = e.Text
 	case TypeSRV:
-		r.Content = fmt.Sprintf("%d %d %d %s", e.Priority, e.Weight, e.Port, e.Host)
+		r.Content = fmt.Sprintf("%d %d %s", e.Weight, e.Port, e.Host)
 	}
 
 	return r

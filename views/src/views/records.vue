@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-button type="primary" size="small" @click="handleAdd">添加记录</el-button>
-    <el-alert v-if="showAlert" title="提示" type="custom" style="margin:8px 0">
+    <el-alert v-if="showAlert" title="提示" type="custom" style="margin:8px 0;">
       <template v-for="(v,i) in description">
         <p v-html="v" :key="'desc'+i"></p>
       </template>
@@ -9,7 +9,12 @@
     <el-table :data="tableData">
       <el-table-column prop="type" label="Type" width="120">
         <template slot-scope="scope">
-          <el-select v-model="scope.row.type" v-if="scope.row.action" size="small" placeholder="type">
+          <el-select
+            v-model="scope.row.type"
+            v-if="scope.row.action"
+            size="small"
+            placeholder="type"
+          >
             <el-option label="A" value="A"></el-option>
             <el-option label="NS" value="NS" disabled></el-option>
             <el-option label="CNAME" value="CNAME"></el-option>
@@ -24,15 +29,22 @@
       </el-table-column>
       <el-table-column prop="ttl" label="TTL" width="110">
         <template slot-scope="scope">
-          <el-input size="small" v-model="scope.row.ttl" placeholder="ttl" v-if="scope.row.action" />
+          <el-input
+            type="number"
+            size="small"
+            v-model.number="scope.row.ttl"
+            placeholder="ttl"
+            v-if="scope.row.action"
+          />
           <span v-else>{{ formatter(scope.row.ttl) }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="priority" label="Priority" width="100">
         <template slot-scope="scope">
           <el-input
+            type="number"
             size="small"
-            v-model="scope.row.priority"
+            v-model.number="scope.row.priority"
             placeholder="priority"
             v-if="scope.row.action"
           />
@@ -41,7 +53,12 @@
       </el-table-column>
       <el-table-column prop="name" label="Name" min-width="400">
         <template slot-scope="scope">
-          <el-input size="small" v-model="scope.row.name" placeholder="name" v-if="scope.row.action" />
+          <el-input
+            size="small"
+            v-model="scope.row.name"
+            placeholder="name"
+            v-if="scope.row.action"
+          />
           <span v-else>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
@@ -51,7 +68,7 @@
             size="small"
             v-model="scope.row.content"
             placeholder="content"
-           v-if="scope.row.action"
+            v-if="scope.row.action"
           />
           <span v-else>{{ scope.row.content }}</span>
         </template>
@@ -80,15 +97,15 @@ export default {
       showAlert: false,
       tableData: [],
       description: [
-        'Name 需要填写完整域名(www.baidu.com)。 Priority可选填写',
-        'A:    IPv4 A记录，Name填写域名，Content填写IP',
-        'NS:    暂不支持',
-        'CNAME: Content 填写别名的值',
-        'PTR:   Name 填写ip, 如127.0.0.1, Content 填写域名',
-        'MX:    Content可直接填写ip 也可填写域名+该域名的A记录',
-        'TXT:   Content填写txt内容',
-        'AAA:   IPv6的A记录',
-        'SRV:   Content 格式 weight port target/hostname, 如：10 8080 127.0.0.1/srv.baidu.com'
+        'Name需要填写完整域名（www.baidu.com）。Priority可选填写',
+        'A: &emsp;&emsp;&emsp;&emsp;用于IPv4的A记录，Name填写域名，Content填写IP',
+        'NS: &emsp;&emsp;&emsp;暂不支持',
+        'CNAME: Content填写别名的值',
+        'PTR: &emsp;&emsp;Name填写ip, 如127.0.0.1, Content填写域名',
+        'MX: &emsp;&emsp;&emsp;Content可直接填写ip也可填写域名+该域名的A记录',
+        'TXT: &emsp;&emsp;Content填写txt内容',
+        'AAA: &emsp;&emsp;用于IPv6的A记录',
+        'SRV: &emsp;&emsp;Content格式：weight port target/hostname, 如：10 8080 127.0.0.1/srv.baidu.com'
       ]
     }
   },
@@ -101,21 +118,39 @@ export default {
       console.log(index, row)
     },
     handleSubmit (index, row) {
-      console.log(index, row)
-      fetch('http://localhost:8088/api/v1/records', {
-        body: JSON.stringify(row),
-        headers: {
-          'content-type': 'application/json'
-        },
-        method: 'POST'
+      const data = {}
+      const url = this.$base_url + '/api/v1/records'
+      for (const k in row) {
+        if (row[k] === '') {
+          continue
+        }
+        data[k] = row[k]
+      }
+      fetch(url, {
+        method: 'POST', // or 'PUT'
+        body: JSON.stringify(data), // data can be `string` or {object}!
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
       })
+        .then((response) => response.json())
+
+        .then((json) => {
+          if (json.msg !== 'success') {
+            this.$message.error(json.msg)
+            return
+          }
+          this.$message.success(json.msg)
+        })
+        .catch((error) => console.error('Error:', error))
+
       console.log('submit!')
     },
     formatter (cellValue) {
       return cellValue || '-'
     }
   },
-  beforeMount () {
+  created () {
     fetch('http://localhost:8088/api/v1/records')
       .then(function (response) {
         return response.json()
@@ -127,23 +162,5 @@ export default {
   }
 }
 </script>
-<style lang="scss" >
-.el-alert--custom {
-  &.is-light {
-    border: 1px solid #abdcff;
-    background-color: #f0faff;
-    color: #17233d;
-  }
-  .el-alert__title {
-    font-size: 14px;
-  }
-  .el-alert__description {
-    color: #515a6e;
-    font-size: 13px;
-    p {
-      white-space: pre;
-      margin: auto;
-    }
-  }
-}
+<style lang="scss" scoped>
 </style>

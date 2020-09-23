@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -19,4 +20,18 @@ func TestRecordUnmarshalJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestReSrv(t *testing.T) {
+	if reSRV.MatchString("1122 333222") {
+		t.Fatal()
+	}
+	if reSRV.MatchString("1122 333222") {
+		t.Fatal()
+	}
+	if !reSRV.MatchString("1122 333 wwww") {
+		t.Fatal()
+	}
+	ss := reSRV.FindStringSubmatch(strings.Trim("1122 333 213.2.3. ", " ."))
+	t.Fatal(len(ss), ss[3])
 }

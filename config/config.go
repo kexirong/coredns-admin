@@ -61,6 +61,6 @@ func Get() *Config {
 	return conf
 }
 
-func init() {
-	Get()
-}
+// func init() {
+// 	Get()
+// }

@@ -18,7 +18,7 @@ import (
 var client *etcdcv3.Client
 
 //InitEtcdClient Must first call this function
-func InitEtcdClient(conf config.Config) (err error) {
+func InitEtcdClient(conf *config.Config) (err error) {
 	etcd := conf.Etcd
 	var tlsConfig *tls.Config
 	if len(etcd.TLS) == 3 {
@@ -50,7 +50,7 @@ func InitEtcdClient(conf config.Config) (err error) {
 
 const etcdTimeout = 5 * time.Second
 
-//GetAllEtcdItems  get all etcd items and use path as the prifix
+//GetAllEtcdItems get all etcd items with path as prifix
 func GetAllEtcdItems(path string) (ex []*model.Etcd, err error) {
 	if client == nil {
 		return nil, errors.New("Client is not initialized")
@@ -76,4 +76,23 @@ func GetAllEtcdItems(path string) (ex []*model.Etcd, err error) {
 
 	}
 	return ex, nil
+}
+
+//GetAllEtcdKeys get all etcd keys with path as prifix
+func GetAllEtcdKeys(path string) (keys []string, err error) {
+	if client == nil {
+		return nil, errors.New("Client is not initialized")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeout)
+	r, err := client.Get(ctx, path, etcdcv3.WithPrefix(), etcdcv3.WithKeysOnly())
+	cancel()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, n := range r.Kvs {
+		keys = append(keys, string(n.Key))
+	}
+	return
 }

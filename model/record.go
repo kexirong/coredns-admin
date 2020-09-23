@@ -4,7 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 )
+
+var reSRV = regexp.MustCompile(`^(?P<weight>\d+) (?P<port>\d+) (?P<target>\S+)$`)
 
 // Type is a DNS type.
 type Type uint16
@@ -96,4 +101,42 @@ type Record struct {
 	Content  string `json:"content"`
 	Key      string `json:"key,omitempty"`
 	Path     string `json:"-"`
+}
+
+func (r Record) ToEtcd() (*Etcd, error) {
+	var e = &Etcd{}
+	if r.TTL != 0 {
+		e.TTL = r.TTL
+	}
+	if r.Priority != 0 {
+		e.Priority = r.Priority
+	}
+	switch r.Type {
+	case TypeMX:
+		e.Mail = true
+		fallthrough
+	case TypeA, TypeCNAME, TypePTR, TypeAAAA:
+		e.Host = r.Content
+	// case TypeNS:
+
+	case TypeTXT:
+		e.Text = r.Content
+	case TypeSRV:
+
+		matchs := reSRV.FindStringSubmatch(r.Content)
+		if len(matchs) != 4 {
+			return nil, errors.New("Content field format is incorrect")
+		}
+		e.Weight, _ = strconv.Atoi(matchs[1])
+		e.Port, _ = strconv.Atoi(matchs[2])
+		e.Host = matchs[3]
+	default:
+		return nil, errors.New("Type field invalid")
+	}
+
+	if !strings.HasSuffix(r.Path, "/") {
+		r.Path = r.Path + "/"
+	}
+	e.Key = r.Path + strings.Join(strings.Split(r.Name, "."), "/")
+	return e, nil
 }

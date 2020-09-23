@@ -1,8 +1,11 @@
 package controller
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -40,9 +43,32 @@ func GetRecords(c *gin.Context) {
 }
 func PostRecords(c *gin.Context) {
 	var rec model.Record
-	if c.ShouldBindJSON(&rec) != nil {
-		log.Printf("%+v\n", rec)
+	err := c.ShouldBindJSON(&rec)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
 	}
+	if rec.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Name field"})
+		return
+	}
+	if rec.Content == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Content field"})
+		return
+	}
+	if rec.Type.String() == `""` {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Type field invalid"})
+		return
+	}
+	rec.Content = strings.Trim(rec.Content, " .")
+	rec.Path = conf.Etcd.PathPrefix
+	etcd, err := rec.ToEtcd()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	j, _ := json.Marshal(etcd)
+	fmt.Println(string(j))
 	c.JSON(http.StatusOK, gin.H{
 		"msg": "success",
 	})
