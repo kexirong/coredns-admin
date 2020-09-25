@@ -6,7 +6,7 @@
         <p v-html="v" :key="'desc'+i"></p>
       </template>
     </el-alert>
-    <el-table :data="tableData">
+    <el-table :data="tableData" ref="table">
       <el-table-column prop="type" label="Type" width="120">
         <template slot-scope="scope">
           <el-select
@@ -90,6 +90,8 @@
 </template>
 
 <script>
+import { encodeURI } from 'js-base64'
+
 export default {
   name: 'Records',
   data () {
@@ -114,8 +116,22 @@ export default {
       this.tableData.unshift({ action: 'add' })
       this.showAlert = true
     },
-    handleDelete (index, row) {
-      console.log(index, row)
+    handleDelete  (index, row) {
+      const key = encodeURI(row.key)
+
+      const url = this.$base_url + '/api/v1/records/' + key
+      fetch(url, { method: 'DELETE' })
+        .then(async (response) => {
+          if (!response.ok) {
+            const json = await response.json()
+            this.$message.error(json.msg)
+            return
+          }
+          this.$message.success('success')
+          this.tableData.splice(index, 1)
+        })
+
+        .catch((error) => console.error('Error:', error))
     },
     handleSubmit (index, row) {
       const data = {}
@@ -141,10 +157,11 @@ export default {
             return
           }
           this.$message.success(json.msg)
+
+          // this.$refs.table.doLayout()
+          row.action = undefined
         })
         .catch((error) => console.error('Error:', error))
-
-      console.log('submit!')
     },
     formatter (cellValue) {
       return cellValue || '-'

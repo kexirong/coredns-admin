@@ -32,7 +32,7 @@ func pathIsExist(path string) bool {
 }
 
 func loadConfig(path string) *Config {
-	conf := &Config{}
+	conf := new(Config)
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {

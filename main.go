@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	err := service.InitEtcdClient(config.Get())
+	err := service.EtcdInitClient(config.Get())
 	if err != nil {
 		panic(err)
 	}

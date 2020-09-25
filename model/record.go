@@ -49,12 +49,12 @@ func (t Type) String() string {
 		enumVal = "SRV"
 	}
 
-	return fmt.Sprintf(`"%s"`, enumVal)
+	return enumVal
 }
 
 // MarshalJSON marshals Type into json.
 func (t Type) MarshalJSON() ([]byte, error) {
-	return []byte(t.String()), nil
+	return []byte(fmt.Sprintf(`"%s"`, t.String())), nil
 }
 
 // UnmarshalJSON unmarshals Level from json.
@@ -104,7 +104,7 @@ type Record struct {
 }
 
 func (r Record) ToEtcd() (*Etcd, error) {
-	var e = &Etcd{}
+	var e = new(Etcd)
 	if r.TTL != 0 {
 		e.TTL = r.TTL
 	}
@@ -137,6 +137,10 @@ func (r Record) ToEtcd() (*Etcd, error) {
 	if !strings.HasSuffix(r.Path, "/") {
 		r.Path = r.Path + "/"
 	}
-	e.Key = r.Path + strings.Join(strings.Split(r.Name, "."), "/")
+	keys := strings.Split(r.Name, ".")
+	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
+		keys[i], keys[j] = keys[j], keys[i]
+	}
+	e.Key = r.Path + strings.Join(keys, "/")
 	return e, nil
 }

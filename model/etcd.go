@@ -38,6 +38,9 @@ func (e Etcd) HostType() Type {
 	if e.Mail {
 		return TypeMX
 	}
+	if e.Port > 0 {
+		return TypeSRV
+	}
 	keyParts := strings.Split(strings.Trim(e.Key, "/"), "/")
 	if strings.Join(keyParts[1:3], "/") == "arpa/in-addr" {
 		return TypePTR
@@ -51,7 +54,6 @@ func (e Etcd) HostType() Type {
 
 	case ip == nil:
 		if len(e.Text) == 0 {
-
 			return TypeCNAME
 		}
 		return TypeTXT

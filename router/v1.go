@@ -11,4 +11,5 @@ func init() {
 	var v1 = Router.Group("/api/v1")
 	v1.GET("/records", controller.GetRecords)
 	v1.POST("/records", controller.PostRecords)
+	v1.DELETE("/records/:key", controller.DeleteRecords)
 }

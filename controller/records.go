@@ -1,8 +1,7 @@
 package controller
 
 import (
-	"encoding/json"
-	"fmt"
+	"encoding/base64"
 	"log"
 	"net/http"
 	"strings"
@@ -19,7 +18,7 @@ var conf = config.Get()
 //GetRecords gin handle, get all records form etcd database
 func GetRecords(c *gin.Context) {
 
-	ex, err := service.GetAllEtcdItems(conf.Etcd.PathPrefix)
+	ex, err := service.EtcdGetItems(conf.Etcd.PathPrefix)
 
 	if err != nil {
 		log.Println("err: ", err)
@@ -41,6 +40,7 @@ func GetRecords(c *gin.Context) {
 		"data": data,
 	})
 }
+
 func PostRecords(c *gin.Context) {
 	var rec model.Record
 	err := c.ShouldBindJSON(&rec)
@@ -67,57 +67,98 @@ func PostRecords(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 		return
 	}
-	j, _ := json.Marshal(etcd)
-	fmt.Println(string(j))
+	kvs, err := service.EtcdGetKvs(etcd.Key)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+
+	if len(kvs) > 0 {
+		bp, abKeys := maxBasicPrefix(kvs)
+
+		if len(abKeys) > 0 {
+			abKvs := make(map[string]string)
+			for _, k := range abKeys {
+				bp = growBasicPrefix(bp)
+				abKvs[k+"/"+bp] = string(kvs[k])
+			}
+
+			err := service.EtcdPutKvs(abKvs, true)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+				return
+			}
+		}
+		etcd.Key += "/" + growBasicPrefix(bp)
+	}
+	err = service.EtcdPutItems(etcd)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"msg": "success",
 	})
 }
+
+func maxBasicPrefix(kvs map[string][]byte) (bPrefix string, abKeys []string) {
+	// bPrefix = "#0"
+
+	for k := range kvs {
+		kPart := strings.Split(k, "/")
+		if !strings.HasPrefix(kPart[len(kPart)-1], "#") {
+			abKeys = append(abKeys, k)
+			continue
+		}
+
+		switch {
+		case len(bPrefix) < len(kPart[len(kPart)-1]):
+
+			bPrefix = kPart[len(kPart)-1]
+
+		case len(bPrefix) == len(kPart[len(kPart)-1]):
+			if strings.Compare(bPrefix, kPart[len(kPart)-1]) < 0 {
+				bPrefix = kPart[len(kPart)-1]
+
+			}
+		}
+	}
+	return bPrefix, abKeys
+}
+
+func growBasicPrefix(bPrefix string) string {
+	if !strings.HasPrefix(bPrefix, "#") {
+		return "#1"
+	}
+	if 49 > bPrefix[len(bPrefix)-1] || bPrefix[len(bPrefix)-1] > 56 {
+		return bPrefix + "1"
+	}
+	bbp := []byte(bPrefix)
+	bbp[len(bbp)-1]++
+	return string(bbp)
+}
+
 func PutRecords(c *gin.Context) {
 
-	ex, err := service.GetAllEtcdItems(conf.Etcd.PathPrefix)
-
-	if err != nil {
-		log.Println("err: ", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg": err.Error(),
-		})
-		return
-	}
-	data := []*model.Record{}
-	for _, e := range ex {
-		r := e.ToRecord()
-		if r == nil || "/"+r.Path != conf.Etcd.PathPrefix {
-			continue
-		}
-		data = append(data, r)
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"msg":  "success",
-		"data": data,
-	})
 }
+
 func DeleteRecords(c *gin.Context) {
+	pk := c.Param("key")
 
-	ex, err := service.GetAllEtcdItems(conf.Etcd.PathPrefix)
+	key, _ := base64.RawURLEncoding.DecodeString(pk)
 
-	if err != nil {
-		log.Println("err: ", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg": err.Error(),
-		})
+	if string(key) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Key field"})
 		return
 	}
-	data := []*model.Record{}
-	for _, e := range ex {
-		r := e.ToRecord()
-		if r == nil || "/"+r.Path != conf.Etcd.PathPrefix {
-			continue
-		}
-		data = append(data, r)
+	err := service.EtcdDelete(string(key))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"msg":  "success",
-		"data": data,
+
+	c.JSON(http.StatusNoContent, gin.H{
+		"msg": "success",
 	})
 }
