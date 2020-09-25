@@ -135,7 +135,7 @@ func (r Record) ToEtcd() (*Etcd, error) {
 	}
 
 	if !strings.HasSuffix(r.Path, "/") {
-		r.Path = r.Path + "/"
+		r.Path += "/"
 	}
 	keys := strings.Split(r.Name, ".")
 	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {

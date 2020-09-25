@@ -14,9 +14,8 @@ func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("token")
 		if token == "" {
-			c.JSON(http.StatusOK, gin.H{
-				"status": -1,
-				"msg":    "请求头未携带token，无权限访问",
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"msg": "Token is invalid",
 			})
 			c.Abort()
 			return
@@ -26,17 +25,9 @@ func JWTAuth() gin.HandlerFunc {
 		// parseToken
 		claims, err := j.ParseToken(token)
 		if err != nil {
-			if err == ErrTokenExpired {
-				c.JSON(http.StatusOK, gin.H{
-					"status": -1,
-					"msg":    "授权已过期",
-				})
-				c.Abort()
-				return
-			}
-			c.JSON(http.StatusOK, gin.H{
-				"status": -1,
-				"msg":    err.Error(),
+
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"msg": err.Error(),
 			})
 			c.Abort()
 			return
@@ -66,9 +57,10 @@ var (
 
 //CustomClaims jwt playload
 type CustomClaims struct {
-	ID    string `json:"userId"`
-	Name  string `json:"name"`
-	Phone string `json:"phone"`
+	ID       string `json:"userId"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Phone    string `json:"phone"`
 	jwt.StandardClaims
 }
 

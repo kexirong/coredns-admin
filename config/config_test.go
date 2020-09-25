@@ -9,7 +9,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestLoadDefaultConfig(t *testing.T) {
-	conf := loadDefaultConfig()
+	loadDefaultConfig(conf)
 	if conf.Host != defaultHost {
 		t.Fatalf("conf.Host!=defaultHost")
 	}

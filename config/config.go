@@ -12,9 +12,10 @@ const filePath = "config.yaml"
 
 //Config all config in this
 type Config struct {
-	Host string `yaml:"host,omitempty"`
-	Port string `yaml:"port,omitempty"`
-	Etcd struct {
+	Host         string `yaml:"host,omitempty"`
+	Port         string `yaml:"port,omitempty"`
+	UserEtcdPath string `yaml:"user_etcd_path,omitempty"`
+	Etcd         struct {
 		Endpoint   []string `yaml:"endpoint"`
 		PathPrefix string   `yaml:"path_prefix"`
 		Username   string   `yaml:"username"`
@@ -31,8 +32,7 @@ func pathIsExist(path string) bool {
 	return err == nil || os.IsExist(err)
 }
 
-func loadConfig(path string) *Config {
-	conf := new(Config)
+func loadConfig(path string) {
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -43,7 +43,6 @@ func loadConfig(path string) *Config {
 		log.Fatalf("error: %v", err)
 	}
 
-	return conf
 }
 
 //Get  get a congfig instance
@@ -51,12 +50,13 @@ func Get() *Config {
 	if conf != nil {
 		return conf
 	}
+	conf = new(Config)
 
 	if pathIsExist(filePath) {
-		conf = loadConfig(filePath)
+		loadConfig(filePath)
 	}
 
-	conf = loadDefaultConfig()
+	loadDefaultConfig(conf)
 
 	return conf
 }

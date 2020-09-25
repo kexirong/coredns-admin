@@ -1,13 +1,28 @@
 package service
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/kexirong/coredns-admin/config"
 )
 
-func TestGetEtcdItems(t *testing.T) {
+func TestGetEtcd(t *testing.T) {
+	var err error
+	err = EtcdInitClient(config.Get())
+	if err != nil {
+		t.Fatal(err)
+	}
+	//value, err := EtcdGet("/coredns")
+	value, err := EtcdGet("/user/coredns/admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value == nil {
+		t.Fatal("value  is nil")
+	}
+
+}
+func TestEtcdGetItems(t *testing.T) {
 	var err error
 	err = EtcdInitClient(config.Get())
 	if err != nil {
@@ -20,9 +35,5 @@ func TestGetEtcdItems(t *testing.T) {
 	if ex == nil {
 		t.Fatal("ex  is nil")
 	}
-	for _, n := range ex {
-		fmt.Printf("%+v\n", n)
-	}
-	t.Fatal()
 
 }

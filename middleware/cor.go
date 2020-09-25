@@ -21,6 +21,5 @@ func Cors() gin.HandlerFunc {
 			return
 		}
 
-		c.Next()
 	}
 }

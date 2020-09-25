@@ -153,3 +153,18 @@ func EtcdDelete(key string) (err error) {
 
 	return err
 }
+
+func EtcdGet(key string) (value []byte, err error) {
+	if client == nil {
+		return nil, errors.New("Etcd Client is not initialized")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeout)
+	r, err := client.Get(ctx, key)
+	cancel()
+
+	if r.Count != 1 || err != nil {
+		return nil, err
+	}
+
+	return r.Kvs[0].Value, err
+}
