@@ -7,8 +7,8 @@ import (
 
 func init() {
 	Router.Use(middleware.Cors())
-	//Router.Use(middleware.JWTAuth())
 	Router.POST("/login", controller.Login)
+	Router.Use(middleware.JWTAuth())
 
 	var v1 = Router.Group("/api/v1")
 	v1.GET("/records", controller.GetRecords)

@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import axios from 'axios'
 import App from './App.vue'
 import router from './router'
 import '@/assets/cutom.scss'
@@ -6,13 +7,11 @@ import './plugins/element.js'
 import { decode } from 'js-base64'
 
 Vue.config.productionTip = false
-Vue.prototype.$base_url = 'http://localhost:8088'
+
 Vue.prototype.$jwtToken = localStorage.jwtToken
+Vue.prototype.$ajax = axios
 
 Vue.prototype.$payloadDecode = function (authToken) {
-  console.log('================================')
-  console.log(this.$jwtToken)
-  console.log('================================')
   if (!authToken || authToken.constructor !== String) {
     return null
   }
@@ -23,7 +22,30 @@ Vue.prototype.$payloadDecode = function (authToken) {
   return JSON.parse(decode(payload))
 }
 
-new Vue({
+const vm = new Vue({
   router,
   render: h => h(App)
 }).$mount('#app')
+
+process.env.NODE_ENV === 'development' && (axios.defaults.baseURL = 'http://localhost:8088')
+// axios.defaults.headers.common['Authorization'] = store.state.authToken
+axios.interceptors.request.use(
+  function (config) {
+    config.headers = { Authorization: vm.$jwtToken }
+    return config
+  })
+axios.interceptors.response.use(function (response) {
+  // 正确响应
+  return response
+}, function (error) {
+  // 响应错误
+  if (error.response.status === 401) {
+    vm.$Notice.warn('授权失效，请重新登录')
+    vm.$router.replace({
+      name: 'Login',
+      query: { next: vm.$route.path === '/login' ? vm.$route.query.next : vm.$route.path }
+    })
+  } else {
+    return Promise.reject(error)
+  }
+})

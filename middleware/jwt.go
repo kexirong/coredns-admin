@@ -12,7 +12,7 @@ import (
 // JWTAuth gin middleware，check jwt token
 func JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.Request.Header.Get("token")
+		token := c.Request.Header.Get("Authorization")
 		if token == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"msg": "Token is invalid",

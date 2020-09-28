@@ -58,28 +58,27 @@ export default {
   methods: {
     submit () {
       this.loading = true
-      const url = this.$base_url + '/login'
-      fetch(url, {
-        method: 'POST', // or 'PUT'
-        body: JSON.stringify(this.login), // data can be `string` or {object}!
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        })
-      })
-        .then((response) => response.json())
 
-        .then((json) => {
+      this.$ajax.post('/login', this.login)
+        .then(response => {
+          const data = response.data
+          localStorage.jwtToken = this.$jwtToken = data.data.token
+
+          this.$message.success('登录成功')
+
+          this.$router.replace(this.$route.query.next || '/')
+
           this.submitLoading = false
-          if (json.msg !== 'success') {
-            this.$message.error(json.msg)
-            return
-          }
-          localStorage.jwtToken = this.$jwtToken = json.data.token
-          console.log(this.$payloadDecode(this.$jwtToken))
-          this.$message.success(json.msg)
-          // this.$router.replace(this.$route.query.next || '/')
         })
-        .catch((error) => console.error('Error:', error))
+        .catch((error) => {
+          if (error.response) {
+            this.$message.warning(error.response.data.msg)
+          } else {
+            this.$message.error('认证失败')
+          }
+          this.submitLoading = false
+          console.log(error)
+        })
     }
   }
 }

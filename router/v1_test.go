@@ -12,7 +12,7 @@ import (
 
 func TestPingRoute(t *testing.T) {
 
-	err := service.InitEtcdClient(*config.Get())
+	err := service.EtcdInitClient(config.Get())
 	if err != nil {
 		t.Fatal(err)
 	}

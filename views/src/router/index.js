@@ -32,5 +32,18 @@ const router = new VueRouter({
   base: process.env.BASE_URL,
   routes
 })
+router.beforeEach((to, from, next) => {
+  window.from = from
 
+  if (to.meta.title) {
+    document.title = to.meta.title
+  }
+
+  console.log(Vue.prototype.$jwtToken)
+  if (to.path !== '/login' && (Vue.prototype.$jwtToken === undefined || Vue.prototype.$jwtToken === 'undefined')) {
+    next({ name: 'Login', query: { next: to.path } })
+  } else {
+    next()
+  }
+})
 export default router

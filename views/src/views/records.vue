@@ -119,44 +119,30 @@ export default {
     handleDelete  (index, row) {
       const key = encodeURI(row.key)
 
-      const url = this.$base_url + '/api/v1/records/' + key
-      fetch(url, { method: 'DELETE' })
-        .then(async (response) => {
-          if (!response.ok) {
-            const json = await response.json()
-            this.$message.error(json.msg)
-            return
-          }
+      const url = '/api/v1/records/' + key
+      this.$ajax.delete(url)
+        .then((response) => {
           this.$message.success('success')
           this.tableData.splice(index, 1)
         })
 
-        .catch((error) => console.error('Error:', error))
+        .catch((error) => {
+          this.$message.error(error.response.data.msg)
+        })
     },
     handleSubmit (index, row) {
       const data = {}
-      const url = this.$base_url + '/api/v1/records'
+
       for (const k in row) {
         if (row[k] === '') {
           continue
         }
         data[k] = row[k]
       }
-      fetch(url, {
-        method: 'POST', // or 'PUT'
-        body: JSON.stringify(data), // data can be `string` or {object}!
-        headers: new Headers({
-          'Content-Type': 'application/json'
-        })
-      })
-        .then((response) => response.json())
+      this.$ajax.post('/api/v1/records', data)
 
-        .then((json) => {
-          if (json.msg !== 'success') {
-            this.$message.error(json.msg)
-            return
-          }
-          this.$message.success(json.msg)
+        .then((response) => {
+          this.$message.success(response.data.msg)
 
           // this.$refs.table.doLayout()
           row.action = undefined
@@ -168,14 +154,11 @@ export default {
     }
   },
   created () {
-    fetch('http://localhost:8088/api/v1/records')
-      .then(function (response) {
-        return response.json()
+    this.$ajax.get('/api/v1/records')
+      .then((response) => {
+        this.tableData = response.data.data
       })
-      .then((myJson) => {
-        this.tableData = myJson.data
-        console.log(myJson)
-      })
+      .catch((error) => console.error('Error:', error))
   }
 }
 </script>
