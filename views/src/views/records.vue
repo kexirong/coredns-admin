@@ -11,7 +11,7 @@
         <template slot-scope="scope">
           <el-select
             v-model="scope.row.type"
-            v-if="scope.row.action"
+            v-if="scope.row.action=='add'"
             size="small"
             placeholder="type"
           >
@@ -57,7 +57,7 @@
             size="small"
             v-model="scope.row.name"
             placeholder="name"
-            v-if="scope.row.action"
+            v-if="scope.row.action=='add'"
           />
           <span v-else>{{ scope.row.name }}</span>
         </template>
@@ -76,12 +76,13 @@
 
       <el-table-column label width="200">
         <template slot-scope="scope">
-          <template v-if="scope.row.action">
+          <template v-if="scope.row.action" >
             <el-button size="mini" type="success" @click="handleSubmit(scope.$index, scope.row)">提交</el-button>
-            <el-button size="mini" @click="tableData.splice(scope.$index,1)">取消</el-button>
+            <el-button size="mini" @click="handleCancel(scope.$index, scope.row)">取消</el-button>
           </template>
           <template v-else>
             <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+             <el-button size="mini" @click="scope.row.action = 'edit'">编辑</el-button>
           </template>
         </template>
       </el-table-column>
@@ -119,7 +120,7 @@ export default {
     handleDelete  (index, row) {
       const key = encodeURI(row.key)
 
-      const url = '/api/v1/records/' + key
+      const url = '/api/v1/record/' + key
       this.$ajax.delete(url)
         .then((response) => {
           this.$message.success('success')
@@ -130,22 +131,35 @@ export default {
           this.$message.error(error.response.data.msg)
         })
     },
+    handleCancel (index, row) {
+      if (row.action === 'add') {
+        this.tableData.splice(index, 1)
+      } else {
+        row.action = ''
+      }
+    },
     handleSubmit (index, row) {
       const data = {}
-
+      let url = '/api/v1/record'
+      let method = 'post'
       for (const k in row) {
-        if (row[k] === '') {
+        if (row[k] === '' || k === 'action') {
           continue
         }
         data[k] = row[k]
       }
-      this.$ajax.post('/api/v1/records', data)
+      if (row.action === 'edit') {
+        const key = encodeURI(row.key)
+        url += '/' + key
+        method = 'put'
+      }
+      this.$ajax({ method, url, data })
 
         .then((response) => {
           this.$message.success(response.data.msg)
 
           // this.$refs.table.doLayout()
-          row.action = undefined
+          row.action = ''
         })
         .catch((error) => console.error('Error:', error))
     },
@@ -156,7 +170,10 @@ export default {
   created () {
     this.$ajax.get('/api/v1/records')
       .then((response) => {
-        this.tableData = response.data.data
+        this.tableData = response.data.data.map(item => {
+          item.action = ''
+          return item
+        })
       })
       .catch((error) => console.error('Error:', error))
   }

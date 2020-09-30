@@ -39,7 +39,7 @@ func GetRecords(c *gin.Context) {
 	})
 }
 
-func PostRecords(c *gin.Context) {
+func PostRecord(c *gin.Context) {
 	var rec model.Record
 	var conf = config.Get()
 	err := c.ShouldBindJSON(&rec)
@@ -138,11 +138,7 @@ func growBasicPrefix(bPrefix string) string {
 	return string(bbp)
 }
 
-func PutRecords(c *gin.Context) {
-
-}
-
-func DeleteRecords(c *gin.Context) {
+func DeleteRecord(c *gin.Context) {
 	pk := c.Param("key")
 
 	key, _ := base64.RawURLEncoding.DecodeString(pk)
@@ -158,6 +154,50 @@ func DeleteRecords(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, gin.H{
+		"msg": "success",
+	})
+}
+
+func PutRecord(c *gin.Context) {
+	key, err := base64.RawURLEncoding.DecodeString(c.Param("key"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	var rec model.Record
+
+	err = c.ShouldBindJSON(&rec)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	if rec.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Name field"})
+		return
+	}
+	if rec.Content == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Content field"})
+		return
+	}
+	if rec.Type.String() == `""` {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Type field invalid"})
+		return
+	}
+	rec.Content = strings.Trim(rec.Content, " .")
+
+	etcd, err := rec.ToEtcd()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+
+	etcd.Key = string(key)
+	err = service.EtcdPutItems(etcd)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
 		"msg": "success",
 	})
 }
