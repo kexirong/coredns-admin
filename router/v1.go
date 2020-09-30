@@ -6,7 +6,7 @@ import (
 	"github.com/kexirong/coredns-admin/middleware"
 )
 
-func init() {
+func initRoute() {
 	Router.StaticFile("/", "./dist/index.html")
 	Router.Static("/js", "./dist/js")
 	Router.Static("/css", "./dist/css")
@@ -25,5 +25,4 @@ func init() {
 	v1.GET("/records", controller.GetRecords)
 	v1.POST("/records", controller.PostRecords)
 	v1.DELETE("/records/:key", controller.DeleteRecords)
-
 }

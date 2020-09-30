@@ -65,7 +65,8 @@ func EtcdGetItems(path string) (ex []*model.Etcd, err error) {
 		e.Key = k
 
 		if err := json.Unmarshal(v, e); err != nil {
-			return nil, fmt.Errorf("%s: %s", k, err.Error())
+			//log.Println(err.Error())
+			continue
 		}
 
 		ex = append(ex, e)

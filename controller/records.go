@@ -13,11 +13,9 @@ import (
 	"github.com/kexirong/coredns-admin/service"
 )
 
-var conf = config.Get()
-
 //GetRecords gin handle, get all records form etcd database
 func GetRecords(c *gin.Context) {
-
+	var conf = config.Get()
 	ex, err := service.EtcdGetItems(conf.Etcd.PathPrefix)
 
 	if err != nil {
@@ -43,6 +41,7 @@ func GetRecords(c *gin.Context) {
 
 func PostRecords(c *gin.Context) {
 	var rec model.Record
+	var conf = config.Get()
 	err := c.ShouldBindJSON(&rec)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})

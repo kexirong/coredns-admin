@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/kexirong/coredns-admin/config"
 	"github.com/kexirong/coredns-admin/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ import (
 var jwt = middleware.NewJWT()
 
 func Login(c *gin.Context) {
+	var conf = config.Get()
 	var user model.User
 	err := c.ShouldBind(&user)
 	if err != nil {

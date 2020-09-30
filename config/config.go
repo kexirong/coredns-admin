@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const filePath = "config.yaml"
+//var filePath = "config.yaml"
 
 //Config all config in this
 type Config struct {
@@ -47,18 +47,23 @@ func loadConfig(path string) {
 
 //Get  get a congfig instance
 func Get() *Config {
-	if conf != nil {
-		return conf
+	if conf == nil {
+		log.Fatalln("Configuration is not initialized")
 	}
+	return conf
+}
+
+func Set(filePath string) {
+
+	if !pathIsExist(filePath) {
+		log.Fatalln("The configuration file does not exist")
+	}
+
 	conf = new(Config)
 
-	if pathIsExist(filePath) {
-		loadConfig(filePath)
-	}
-
+	loadConfig(filePath)
 	loadDefaultConfig(conf)
 
-	return conf
 }
 
 // func init() {
