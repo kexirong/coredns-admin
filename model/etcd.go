@@ -41,11 +41,12 @@ func (e Etcd) HostType() Type {
 	if e.Port > 0 {
 		return TypeSRV
 	}
-	keyParts := strings.Split(strings.Trim(e.Key, "/"), "/")
-	if strings.Join(keyParts[1:3], "/") == "arpa/in-addr" {
+
+	if strings.Contains(e.Key, "arpa/in-addr") {
 		return TypePTR
 	}
-	if strings.Join(keyParts[len(keyParts)-2:], "/") == "dns/ns" {
+
+	if strings.Contains(e.Key, "dns/ns") {
 		return TypeNS
 	}
 	ip := net.ParseIP(e.Host)
@@ -79,7 +80,7 @@ func (e Etcd) ToRecord() *Record {
 	if len(keyParts) < 2 {
 		return nil
 	}
-	r.Path = keyParts[0]
+	r.Path = fmt.Sprintf("/%s/", keyParts[0])
 
 	if keyParts[len(keyParts)-1][0] == '#' {
 		keyParts = keyParts[:len(keyParts)-1]

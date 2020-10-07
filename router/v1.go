@@ -26,4 +26,6 @@ func initRoute() {
 	v1.POST("/record", controller.PostRecord)
 	v1.DELETE("/record/:key", controller.DeleteRecord)
 	v1.PUT("/record/:key", controller.PutRecord)
+
+	v1.GET("/domains", controller.GetDomains)
 }

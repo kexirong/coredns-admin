@@ -8,6 +8,7 @@ import (
 
 func TestGetEtcd(t *testing.T) {
 	var err error
+	config.LoadDefaultConfig()
 	err = EtcdInitClient(config.Get())
 	if err != nil {
 		t.Fatal(err)

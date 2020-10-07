@@ -58,9 +58,6 @@ password:
 		goto password
 	}
 
-	if !strings.HasSuffix(prefixPath, "/") {
-		prefixPath += "/"
-	}
 	path := prefixPath + username
 	secret := service.MakeSecret(password)
 	err := service.EtcdPutKv(path, secret)

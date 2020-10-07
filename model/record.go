@@ -137,6 +137,9 @@ func (r Record) ToEtcd() (*Etcd, error) {
 	if !strings.HasSuffix(r.Path, "/") {
 		r.Path += "/"
 	}
+	if r.Type == TypePTR {
+		r.Path += "arpa/in-addr/"
+	}
 	keys := strings.Split(r.Name, ".")
 	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
 		keys[i], keys[j] = keys[j], keys[i]

@@ -1,9 +1,11 @@
 <template>
   <div>
-    <el-button type="primary" size="small" @click="handleAdd">添加记录</el-button>
-    <el-alert v-if="showAlert" title="提示" type="custom" style="margin:8px 0;">
-      <template v-for="(v,i) in description">
-        <p v-html="v" :key="'desc'+i"></p>
+    <el-button type="primary" size="small" @click="handleAdd"
+      >添加记录</el-button
+    >
+    <el-alert v-if="showAlert" title="提示" type="custom" style="margin: 8px 0">
+      <template v-for="(v, i) in description">
+        <p v-html="v" :key="'desc' + i"></p>
       </template>
     </el-alert>
     <el-table :data="tableData" ref="table">
@@ -11,7 +13,7 @@
         <template slot-scope="scope">
           <el-select
             v-model="scope.row.type"
-            v-if="scope.row.action=='add'"
+            v-if="scope.row.action == 'add'"
             size="small"
             placeholder="type"
           >
@@ -57,7 +59,7 @@
             size="small"
             v-model="scope.row.name"
             placeholder="name"
-            v-if="scope.row.action=='add'"
+            v-if="scope.row.action == 'add'"
           />
           <span v-else>{{ scope.row.name }}</span>
         </template>
@@ -76,13 +78,32 @@
 
       <el-table-column label width="200">
         <template slot-scope="scope">
-          <template v-if="scope.row.action" >
-            <el-button size="mini" type="success" @click="handleSubmit(scope.$index, scope.row)">提交</el-button>
-            <el-button size="mini" @click="handleCancel(scope.$index, scope.row)">取消</el-button>
+          <template v-if="scope.row.action">
+            <el-button
+              size="mini"
+              type="success"
+              @click="handleSubmit(scope.$index, scope.row)"
+              >提交</el-button
+            >
+            <el-button
+              size="mini"
+              @click="handleCancel(scope.$index, scope.row)"
+              >取消</el-button
+            >
           </template>
           <template v-else>
-            <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-             <el-button size="mini" @click="scope.row.action = 'edit'">编辑</el-button>
+            <el-button size="mini" @click="scope.row.action = 'edit'"
+              >编辑</el-button
+            >
+            <i style="width: 8px; display: inline-block" />
+            <el-popconfirm
+              title="确认删除?"
+              @onConfirm="handleDelete(scope.$index, scope.row)"
+            >
+              <el-button size="mini" slot="reference" type="danger"
+                >删除</el-button
+              >
+            </el-popconfirm>
           </template>
         </template>
       </el-table-column>
@@ -117,11 +138,12 @@ export default {
       this.tableData.unshift({ action: 'add' })
       this.showAlert = true
     },
-    handleDelete  (index, row) {
+    handleDelete (index, row) {
       const key = encodeURI(row.key)
 
       const url = '/api/v1/record/' + key
-      this.$ajax.delete(url)
+      this.$ajax
+        .delete(url)
         .then((response) => {
           this.$message.success('success')
           this.tableData.splice(index, 1)
@@ -168,9 +190,10 @@ export default {
     }
   },
   created () {
-    this.$ajax.get('/api/v1/records')
+    this.$ajax
+      .get('/api/v1/records')
       .then((response) => {
-        this.tableData = response.data.data.map(item => {
+        this.tableData = response.data.data.map((item) => {
           item.action = ''
           return item
         })

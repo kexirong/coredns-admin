@@ -2,7 +2,6 @@ package controller
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/kexirong/coredns-admin/config"
 	"github.com/kexirong/coredns-admin/middleware"
@@ -24,9 +23,7 @@ func Login(c *gin.Context) {
 	}
 
 	path := conf.UserEtcdPath
-	if !strings.HasSuffix(path, "/") {
-		path += "/"
-	}
+
 	secret, err := service.EtcdGet(path + user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})

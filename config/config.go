@@ -66,6 +66,11 @@ func Set(filePath string) {
 
 }
 
+func LoadDefaultConfig() {
+	conf = new(Config)
+	loadDefaultConfig(conf)
+}
+
 // func init() {
 // 	Get()
 // }

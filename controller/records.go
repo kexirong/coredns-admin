@@ -28,7 +28,7 @@ func GetRecords(c *gin.Context) {
 	data := []*model.Record{}
 	for _, e := range ex {
 		r := e.ToRecord()
-		if r == nil || "/"+r.Path != conf.Etcd.PathPrefix {
+		if r == nil || r.Path != conf.Etcd.PathPrefix {
 			continue
 		}
 		data = append(data, r)
