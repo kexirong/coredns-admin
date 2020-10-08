@@ -23,6 +23,7 @@ func initRoute() {
 	var v1 = Router.Group("/api/v1", middleware.JWTAuth())
 
 	v1.GET("/records", controller.GetRecords)
+	v1.GET("/record/:path", controller.GetRecords)
 	v1.POST("/record", controller.PostRecord)
 	v1.DELETE("/record/:key", controller.DeleteRecord)
 	v1.PUT("/record/:key", controller.PutRecord)

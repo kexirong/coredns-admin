@@ -17,7 +17,7 @@ func NewDomainTree() *Domain {
 	return tree
 }
 
-func (d *Domain) AddSubDomain(qdn string) {
+func (d *Domain) AddSubDomain(qdn string, deep uint8) {
 	qdn = strings.Trim(qdn, ".")
 	idx := strings.Index(qdn, ".")
 	if idx < 0 {
@@ -34,8 +34,8 @@ func (d *Domain) AddSubDomain(qdn string) {
 		d.SubDomain = append(d.SubDomain, subDomain)
 
 	}
-	if idx < len(qdn) {
-		subDomain.AddSubDomain(qdn[idx:])
+	if idx < len(qdn) && d.idx < deep-1 {
+		subDomain.AddSubDomain(qdn[idx:], deep)
 	}
 
 }

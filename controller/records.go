@@ -15,8 +15,17 @@ import (
 
 //GetRecords gin handle, get all records form etcd database
 func GetRecords(c *gin.Context) {
+	param := c.Param("path")
+	bp, _ := base64.RawURLEncoding.DecodeString(param)
+
 	var conf = config.Get()
-	ex, err := service.EtcdGetItems(conf.Etcd.PathPrefix)
+	path := conf.Etcd.PathPrefix
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	path += strings.TrimPrefix(string(bp), "/")
+
+	ex, err := service.EtcdGetItems(path)
 
 	if err != nil {
 		log.Println("err: ", err)

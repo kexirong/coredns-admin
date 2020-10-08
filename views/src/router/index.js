@@ -13,15 +13,20 @@ const routes = [
     children: [
       {
         path: 'records',
-        name: 'Record',
+        name: 'Records',
         component: () => import(/* webpackChunkName: "records" */ '../views/records.vue')
+      },
+      {
+        path: 'domains',
+        name: 'Domains',
+        component: () => import(/* webpackChunkName: "domains" */ '../views/domains.vue')
       }
     ]
   },
   {
     path: '/login',
     name: 'Login',
-    component: () => import(/* webpackChunkName: "records" */ '../views/login.vue')
+    component: () => import(/* webpackChunkName: "login" */ '../views/login.vue')
 
   }
 
@@ -37,9 +42,11 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.title) {
     document.title = to.meta.title
+  } else {
+    document.title = to.name
   }
-  if (to.matched.length === 0) { // 如果未匹配到路由
-    from.path ? next({ path: from.path }) : next('/') // 如果上级也未匹配到路由则跳转主页面，如果上级能匹配到则转上级路由
+  if (to.matched.length === 0) {
+    from.path ? next({ path: from.path }) : next('/')
     return
   }
   if (to.path !== '/login' && !(localStorage.jwtToken)) {

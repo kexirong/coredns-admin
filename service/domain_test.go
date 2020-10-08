@@ -13,7 +13,7 @@ func TestDomains(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tree, err := Domains("/coredns/")
+	tree, err := Domains("/coredns/", 2)
 	if err != nil {
 		t.Error(err)
 	}

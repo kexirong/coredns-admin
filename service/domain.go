@@ -7,7 +7,7 @@ import (
 	"github.com/kexirong/coredns-admin/model"
 )
 
-func Domains(path string) (tree *model.Domain, err error) {
+func Domains(path string, deep uint8) (tree *model.Domain, err error) {
 	tree = model.NewDomainTree()
 	kvs, err := EtcdGetKvs(path)
 	if err != nil {
@@ -23,7 +23,7 @@ func Domains(path string) (tree *model.Domain, err error) {
 		}
 		key := strings.TrimPrefix(k, path)
 		domain := strings.ReplaceAll(key, "/", ".")
-		tree.AddSubDomain(domain)
+		tree.AddSubDomain(domain, deep)
 
 	}
 	return tree, nil

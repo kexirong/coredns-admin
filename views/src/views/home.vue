@@ -7,7 +7,7 @@
     </el-header>
     <el-container style="  margin-top: 24px;">
       <el-aside width="200px">
-        <el-menu default-active="/records">
+        <el-menu :default-active="active"  router >
           <el-submenu index="/">
             <template slot="title">
               <i class="el-icon-eleme"></i>
@@ -15,7 +15,7 @@
             </template>
 
             <el-menu-item index="/records">记录</el-menu-item>
-            <el-menu-item index="1-2">域名</el-menu-item>
+            <el-menu-item index="/domains">域名</el-menu-item>
           </el-submenu>
         </el-menu>
       </el-aside>
@@ -30,7 +30,16 @@
 // @ is an alias to /src
 
 export default {
-  name: 'Home'
+  name: 'Home',
+  data () {
+    return {
+      active: ''
+    }
+  },
+  created () {
+    this.active = this.$route.path
+  }
+
 }
 </script>
 

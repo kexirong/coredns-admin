@@ -1,8 +1,7 @@
 <template>
   <div>
     <el-button type="primary" size="small" @click="handleAdd"
-      >添加记录</el-button
-    >
+      >添加记录</el-button>
     <el-alert v-if="showAlert" title="提示" type="custom" style="margin: 8px 0">
       <template v-for="(v, i) in description">
         <p v-html="v" :key="'desc' + i"></p>

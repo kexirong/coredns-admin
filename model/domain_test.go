@@ -7,7 +7,7 @@ import (
 func TestDomain(t *testing.T) {
 
 	tree := NewDomainTree()
-	tree.AddSubDomain("...com.aaaa.www.............")
+	tree.AddSubDomain("...com.aaaa.www.............", 255)
 
 	s1 := tree.SubDomain[0]
 	if s1.Name != "com" {
