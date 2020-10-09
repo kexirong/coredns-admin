@@ -2,17 +2,20 @@
   <div class="login-vue">
     <div class="login-container">
       <div class="login-content">
-        <div class="login-title">用户登录</div>
+        <div class="login-title">
+          用户登录
+        </div>
         <div class="login-name login-input">
           <input
             type="text"
             name="username"
             v-model="login.username"
             autocomplete="off"
-          />
-          <span class="placeholder" :class="{ fixed: !!login.username }"
-            >用户名</span
           >
+          <span
+            class="placeholder"
+            :class="{ fixed: !!login.username }"
+          >用户名</span>
         </div>
         <div class="login-password login-input">
           <input
@@ -21,10 +24,11 @@
             v-model="login.password"
             @keyup.enter="submit"
             autocomplete="off"
-          />
-          <span class="placeholder" :class="{ fixed: !!login.password }"
-            >密码</span
           >
+          <span
+            class="placeholder"
+            :class="{ fixed: !!login.password }"
+          >密码</span>
         </div>
         <div class="buttonDiv">
           <el-button

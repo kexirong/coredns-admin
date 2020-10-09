@@ -1,20 +1,35 @@
 <template>
   <el-row :gutter="5">
     <el-col :span="5">
-        <el-input-number size="mini" :min=0 :max=10 v-model="num" @change="change"></el-input-number>
+      <el-input-number
+        size="mini"
+        :min="0"
+        :max="10"
+        v-model="num"
+        @change="change"
+      />
       <el-tree
         :data="treeData"
         default-expand-all
         :props="defaultProps"
         @node-click="handleNodeClick"
         :expand-on-click-node="false"
-      ></el-tree>
+      />
     </el-col>
     <el-col :span="19">
-       <el-button type="primary" size="mini" @click="handleAdd"
-      >添加记录</el-button>
-      <el-table :data="tableData" ref="table">
-        <el-table-column prop="type" label="Type" width="120">
+      <el-button
+        type="primary"
+        size="mini"
+        @click="handleAdd"
+      >
+        添加记录
+      </el-button>
+      <el-table :data="tableData.filter(d => !search || d.name.includes(search))">
+        <el-table-column
+          prop="type"
+          label="Type"
+          width="120"
+        >
           <template slot-scope="scope">
             <el-select
               v-model="scope.row.type"
@@ -22,19 +37,48 @@
               size="small"
               placeholder="type"
             >
-              <el-option label="A" value="A"></el-option>
-              <el-option label="NS" value="NS" disabled></el-option>
-              <el-option label="CNAME" value="CNAME"></el-option>
-              <el-option label="PTR" value="PTR"></el-option>
-              <el-option label="MX" value="MX"></el-option>
-              <el-option label="TXT" value="TXT"></el-option>
-              <el-option label="AAA" value="AAA"></el-option>
-              <el-option label="SRV" value="SRV"></el-option>
+              <el-option
+                label="A"
+                value="A"
+              />
+              <el-option
+                label="NS"
+                value="NS"
+                disabled
+              />
+              <el-option
+                label="CNAME"
+                value="CNAME"
+              />
+              <el-option
+                label="PTR"
+                value="PTR"
+              />
+              <el-option
+                label="MX"
+                value="MX"
+              />
+              <el-option
+                label="TXT"
+                value="TXT"
+              />
+              <el-option
+                label="AAA"
+                value="AAA"
+              />
+              <el-option
+                label="SRV"
+                value="SRV"
+              />
             </el-select>
             <span v-else>{{ scope.row.type }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="ttl" label="TTL" width="110">
+        <el-table-column
+          prop="ttl"
+          label="TTL"
+          width="110"
+        >
           <template slot-scope="scope">
             <el-input
               type="number"
@@ -46,7 +90,11 @@
             <span v-else>{{ formatter(scope.row.ttl) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="priority" label="Priority" width="100">
+        <el-table-column
+          prop="priority"
+          label="Priority"
+          width="100"
+        >
           <template slot-scope="scope">
             <el-input
               type="number"
@@ -58,7 +106,11 @@
             <span v-else>{{ formatter(scope.row.priority) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="Name" min-width="200">
+        <el-table-column
+          prop="name"
+          label="Name"
+          min-width="200"
+        >
           <template slot-scope="scope">
             <el-input
               size="small"
@@ -69,7 +121,11 @@
             <span v-else>{{ scope.row.name }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="content" label="Content" min-width="350">
+        <el-table-column
+          prop="content"
+          label="Content"
+          min-width="350"
+        >
           <template slot-scope="scope">
             <el-input
               size="small"
@@ -81,39 +137,59 @@
           </template>
         </el-table-column>
 
-        <el-table-column label width="150">
+        <el-table-column
+          label
+          width="150"
+        >
+          <!-- eslint-disable-next-line vue/no-unused-vars -->
+          <template  slot="header" slot-scope="scope" >
+            <el-input
+              v-model="search"
+              size="mini"
+              placeholder="输入关键字搜索"
+            />
+          </template>
           <template slot-scope="scope">
             <template v-if="scope.row.action">
               <el-button
                 size="mini"
                 type="success"
                 @click="handleSubmit(scope.$index, scope.row)"
-                >提交</el-button
               >
+                提交
+              </el-button>
               <el-button
                 size="mini"
                 @click="handleCancel(scope.$index, scope.row)"
-                >取消</el-button
               >
+                取消
+              </el-button>
             </template>
             <template v-else>
-              <el-button size="mini" @click="scope.row.action = 'edit'"
-                >编辑</el-button
+              <el-button
+                size="mini"
+                @click="scope.row.action = 'edit'"
               >
+                编辑
+              </el-button>
               <i style="width: 8px; display: inline-block" />
               <el-popconfirm
                 title="确认删除?"
                 @onConfirm="handleDelete(scope.$index, scope.row)"
               >
-                <el-button size="mini" slot="reference" type="danger"
-                  >删除</el-button
+                <el-button
+                  size="mini"
+                  slot="reference"
+                  type="danger"
                 >
+                  删除
+                </el-button>
               </el-popconfirm>
             </template>
           </template>
         </el-table-column>
-      </el-table></el-col
-    >
+      </el-table>
+    </el-col>
   </el-row>
 </template>
 
@@ -137,7 +213,8 @@ export default {
       defaultProps: {
         children: 'subdomain',
         label: 'name'
-      }
+      },
+      search: ''
     }
   },
   created () {
@@ -222,7 +299,10 @@ export default {
         .get(`/api/v1/domains?deep=${this.num}`)
         .then((response) => {
           const data = response.data.data
-          if (data.constructor === Object && Object.prototype.hasOwnProperty.call(data, 'subdomain')) {
+          if (
+            data.constructor === Object &&
+            Object.prototype.hasOwnProperty.call(data, 'subdomain')
+          ) {
             this.treeData = addKey(data.subdomain, '')
           }
         })

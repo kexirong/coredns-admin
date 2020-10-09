@@ -1,14 +1,35 @@
+/* eslint-disable vue/no-unused-vars */
 <template>
   <div>
-    <el-button type="primary" size="small" @click="handleAdd"
-      >添加记录</el-button>
-    <el-alert v-if="showAlert" title="提示" type="custom" style="margin: 8px 0">
+    <el-button
+      type="primary"
+      size="small"
+      @click="handleAdd"
+    >
+      添加记录
+    </el-button>
+    <el-alert
+      v-if="showAlert"
+      title="提示"
+      type="custom"
+      style="margin: 8px 0"
+    >
       <template v-for="(v, i) in description">
-        <p v-html="v" :key="'desc' + i"></p>
+        <p
+          v-html="v"
+          :key="'desc' + i"
+        />
       </template>
     </el-alert>
-    <el-table :data="tableData" ref="table">
-      <el-table-column prop="type" label="Type" width="120">
+    <el-table :data="tableData.filter(d => !search || d.name.includes(search))">
+      <el-table-column
+        prop="type"
+        label="Type"
+        :filters="filters"
+        :filter-method="filterHandler"
+        filter-placement="bottom-start"
+        width="120"
+      >
         <template slot-scope="scope">
           <el-select
             v-model="scope.row.type"
@@ -16,19 +37,48 @@
             size="small"
             placeholder="type"
           >
-            <el-option label="A" value="A"></el-option>
-            <el-option label="NS" value="NS" disabled></el-option>
-            <el-option label="CNAME" value="CNAME"></el-option>
-            <el-option label="PTR" value="PTR"></el-option>
-            <el-option label="MX" value="MX"></el-option>
-            <el-option label="TXT" value="TXT"></el-option>
-            <el-option label="AAA" value="AAA"></el-option>
-            <el-option label="SRV" value="SRV"></el-option>
+            <el-option
+              label="A"
+              value="A"
+            />
+            <el-option
+              label="NS"
+              value="NS"
+              disabled
+            />
+            <el-option
+              label="CNAME"
+              value="CNAME"
+            />
+            <el-option
+              label="PTR"
+              value="PTR"
+            />
+            <el-option
+              label="MX"
+              value="MX"
+            />
+            <el-option
+              label="TXT"
+              value="TXT"
+            />
+            <el-option
+              label="AAA"
+              value="AAA"
+            />
+            <el-option
+              label="SRV"
+              value="SRV"
+            />
           </el-select>
           <span v-else>{{ scope.row.type }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="ttl" label="TTL" width="110">
+      <el-table-column
+        prop="ttl"
+        label="TTL"
+        width="110"
+      >
         <template slot-scope="scope">
           <el-input
             type="number"
@@ -40,7 +90,11 @@
           <span v-else>{{ formatter(scope.row.ttl) }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="priority" label="Priority" width="100">
+      <el-table-column
+        prop="priority"
+        label="Priority"
+        width="100"
+      >
         <template slot-scope="scope">
           <el-input
             type="number"
@@ -52,7 +106,11 @@
           <span v-else>{{ formatter(scope.row.priority) }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="name" label="Name" min-width="400">
+      <el-table-column
+        prop="name"
+        label="Name"
+        min-width="400"
+      >
         <template slot-scope="scope">
           <el-input
             size="small"
@@ -63,7 +121,11 @@
           <span v-else>{{ scope.row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="content" label="Content" min-width="700">
+      <el-table-column
+        prop="content"
+        label="Content"
+        min-width="700"
+      >
         <template slot-scope="scope">
           <el-input
             size="small"
@@ -75,33 +137,51 @@
         </template>
       </el-table-column>
 
-      <el-table-column label width="200">
+      <el-table-column width="200">
+        <!-- eslint-disable-next-line vue/no-unused-vars -->
+        <template  slot="header" slot-scope="scope" >
+          <el-input
+            v-model="search"
+            size="mini"
+            prefix-icon="el-icon-search"
+            placeholder="输入关键字搜索"
+          />
+        </template>
         <template slot-scope="scope">
           <template v-if="scope.row.action">
             <el-button
               size="mini"
               type="success"
               @click="handleSubmit(scope.$index, scope.row)"
-              >提交</el-button
             >
+              提交
+            </el-button>
             <el-button
               size="mini"
               @click="handleCancel(scope.$index, scope.row)"
-              >取消</el-button
             >
+              取消
+            </el-button>
           </template>
           <template v-else>
-            <el-button size="mini" @click="scope.row.action = 'edit'"
-              >编辑</el-button
+            <el-button
+              size="mini"
+              @click="scope.row.action = 'edit'"
             >
+              编辑
+            </el-button>
             <i style="width: 8px; display: inline-block" />
             <el-popconfirm
               title="确认删除?"
               @onConfirm="handleDelete(scope.$index, scope.row)"
             >
-              <el-button size="mini" slot="reference" type="danger"
-                >删除</el-button
+              <el-button
+                size="mini"
+                slot="reference"
+                type="danger"
               >
+                删除
+              </el-button>
             </el-popconfirm>
           </template>
         </template>
@@ -129,7 +209,17 @@ export default {
         'TXT: &emsp;&emsp;Content填写txt内容',
         'AAA: &emsp;&emsp;用于IPv6的A记录',
         'SRV: &emsp;&emsp;Content格式：weight port target/hostname, 如：10 8080 127.0.0.1/srv.baidu.com'
-      ]
+      ],
+      filters: [
+        { text: 'A', value: 'A' },
+        { text: 'CNAME', value: 'CNAME' },
+        { text: 'PTR', value: 'PTR' },
+        { text: 'AAA', value: 'AAA' },
+        { text: 'SRV', value: 'SRV' },
+        { text: 'TXT', value: 'TXT' },
+        { text: 'MX', value: 'MX' }
+      ],
+      search: ''
     }
   },
   methods: {
@@ -186,6 +276,10 @@ export default {
     },
     formatter (cellValue) {
       return cellValue || '-'
+    },
+    filterHandler (value, row, column) {
+      const property = column.property
+      return row[property] === value
     }
   },
   created () {
