@@ -1,0 +1,22 @@
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.2.0",
+    "pinia": "^2.0.23",
+    "qs": "^6.11.0",
+    "vue": "^3.2.41",
+    "vue-router": "^4.1.5"
+  },
+  "devDependencies": {
+    "@arco-design/web-vue": "^2.39.0",
+    "@vitejs/plugin-vue": "^3.1.2",
+    "vite": "^3.1.8",
+    "vite-plugin-style-import": "^2.0.0"
+  }
+}

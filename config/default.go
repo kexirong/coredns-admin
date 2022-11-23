@@ -3,28 +3,20 @@ package config
 import "strings"
 
 const (
-	defaultEndpoint     = "http://10.1.1.224:2379"
-	defaultPathPrefix   = "/coredns"
-	defaultUserEtcdPath = "/user/coredns"
-	defaultEtcdTimeout  = 5
-	defaultHost         = ""
-	defaultPort         = "8080"
+	defaultEndpoint   = "http://10.1.1.224:2379"
+	defaultPathPrefix = "/coredns"
+
+	defaultEtcdTimeout = 5
+
+	defaultListen = ":8080"
 )
 
 func loadDefaultConfig(conf *Config) {
 
-	if conf.Host == "" {
-		conf.Host = defaultHost
+	if conf.Listen == "" {
+		conf.Listen = defaultListen
 	}
-	if conf.Port == "" {
-		conf.Port = defaultPort
-	}
-	if conf.UserEtcdPath == "" {
-		conf.UserEtcdPath = defaultUserEtcdPath
-	}
-	if !strings.HasSuffix(conf.UserEtcdPath, "/") {
-		conf.UserEtcdPath += "/"
-	}
+
 	if len(conf.Etcd.Endpoint) == 0 {
 		conf.Etcd.Endpoint = []string{defaultEndpoint}
 	}

@@ -12,10 +12,11 @@ import (
 
 //Config all config in this
 type Config struct {
-	Host         string `yaml:"host,omitempty"`
-	Port         string `yaml:"port,omitempty"`
-	UserEtcdPath string `yaml:"user_etcd_path,omitempty"`
-	Etcd         struct {
+	Listen   string `yaml:"listen"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+
+	Etcd struct {
 		Endpoint   []string `yaml:"endpoint"`
 		PathPrefix string   `yaml:"path_prefix"`
 		Username   string   `yaml:"username"`
@@ -48,7 +49,7 @@ func loadConfig(path string) {
 //Get  get a congfig instance
 func Get() *Config {
 	if conf == nil {
-		log.Fatalln("Configuration is not initialized")
+		log.Fatalln("configuration is not initialized")
 	}
 	return conf
 }
@@ -56,7 +57,7 @@ func Get() *Config {
 func Set(filePath string) {
 
 	if !pathIsExist(filePath) {
-		log.Fatalln("The configuration file does not exist")
+		log.Fatalln("the configuration file does not exist")
 	}
 
 	conf = new(Config)

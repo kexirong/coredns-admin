@@ -1,4 +1,4 @@
-package controller
+package etcd
 
 import (
 	"encoding/base64"
@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 
 	"github.com/kexirong/coredns-admin/config"
 	"github.com/kexirong/coredns-admin/model"
@@ -14,7 +15,7 @@ import (
 )
 
 //GetRecords gin handle, get all records form etcd database
-func GetRecords(c *gin.Context) {
+func GetRecords(c echo.Context) error {
 	param := c.Param("path")
 	bp, _ := base64.RawURLEncoding.DecodeString(param)
 
@@ -25,61 +26,60 @@ func GetRecords(c *gin.Context) {
 	}
 	path += strings.TrimPrefix(string(bp), "/")
 
-	ex, err := service.EtcdGetItems(path)
+	ex, err := EtcdGetItems(path)
 
 	if err != nil {
 		log.Println("err: ", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
+		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"msg": err.Error(),
 		})
-		return
 	}
 	data := []*model.Record{}
 	for _, e := range ex {
 		r := e.ToRecord()
-		if r == nil || r.Path != conf.Etcd.PathPrefix {
+		if r == nil {
 			continue
 		}
 		data = append(data, r)
 	}
-	c.JSON(http.StatusOK, gin.H{
+	return c.JSON(http.StatusOK, echo.Map{
 		"msg":  "success",
 		"data": data,
 	})
 }
 
-func PostRecord(c *gin.Context) {
+func PostRecord(c echo.Context) error {
 	var rec model.Record
 	var conf = config.Get()
-	err := c.ShouldBindJSON(&rec)
+	err := c.Bind(&rec)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
 	if rec.Name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Name field"})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Name field"})
+
 	}
 	if rec.Content == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Content field"})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Content field"})
+
 	}
-	if rec.Type.String() == `""` {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Type field invalid"})
-		return
-	}
+	// if rec.Type.String() == `""` {
+	// 	return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Type field invalid"})
+
+	// }
 	rec.Content = strings.Trim(rec.Content, " .")
-	rec.Path = conf.Etcd.PathPrefix
-	etcd, err := rec.ToEtcd()
+
+	etcd, err := EtcdFromRecord(&rec, conf.Etcd.PathPrefix)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
 	kvs, err := service.EtcdGetKvs(etcd.Key)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
 
 	if len(kvs) > 0 {
@@ -89,34 +89,37 @@ func PostRecord(c *gin.Context) {
 			abKvs := make(map[string]string)
 			for _, k := range abKeys {
 				bp = growBasicPrefix(bp)
-				abKvs[k+"/"+bp] = string(kvs[k])
+				value := GetValueFromKVS(kvs, k)
+				if value != nil {
+					abKvs[k+"/"+bp] = string(value)
+				}
 			}
 
 			err := service.EtcdPutKvs(abKvs, true)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-				return
+				return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 			}
 		}
 		etcd.Key += "/" + growBasicPrefix(bp)
 	}
-	err = service.EtcdPutItems(etcd)
+	err = EtcdPutItems(etcd)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
-	c.JSON(http.StatusOK, gin.H{
+	return c.JSON(http.StatusOK, echo.Map{
 		"msg": "success",
 	})
 }
 
-func maxBasicPrefix(kvs map[string][]byte) (bPrefix string, abKeys []string) {
+func maxBasicPrefix(kvs []*mvccpb.KeyValue) (bPrefix string, abKeys []string) {
 	// bPrefix = "#0"
 
-	for k := range kvs {
-		kPart := strings.Split(k, "/")
+	for _, kv := range kvs {
+		kPart := strings.Split(string(kv.Key), "/")
 		if !strings.HasPrefix(kPart[len(kPart)-1], "#") {
-			abKeys = append(abKeys, k)
+			abKeys = append(abKeys, string(kv.Key))
 			continue
 		}
 
@@ -147,66 +150,63 @@ func growBasicPrefix(bPrefix string) string {
 	return string(bbp)
 }
 
-func DeleteRecord(c *gin.Context) {
+func DeleteRecord(c echo.Context) error {
 	pk := c.Param("key")
 
 	key, _ := base64.RawURLEncoding.DecodeString(pk)
 
 	if string(key) == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Key field"})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Key field"})
+
 	}
 	err := service.EtcdDelete(string(key))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
 
-	c.JSON(http.StatusNoContent, gin.H{
+	return c.JSON(http.StatusNoContent, echo.Map{
 		"msg": "success",
 	})
 }
 
-func PutRecord(c *gin.Context) {
+func PutRecord(c echo.Context) error {
 	key, err := base64.RawURLEncoding.DecodeString(c.Param("key"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
 	var rec model.Record
 
-	err = c.ShouldBindJSON(&rec)
+	err = c.Bind(&rec)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
 	if rec.Name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Name field"})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Name field"})
+
 	}
 	if rec.Content == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Empty value for Content field"})
-		return
-	}
-	if rec.Type.String() == `""` {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Type field invalid"})
-		return
-	}
-	rec.Content = strings.Trim(rec.Content, " .")
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Content field"})
 
-	etcd, err := rec.ToEtcd()
+	}
+
+	rec.Content = strings.Trim(rec.Content, " .")
+	var conf = config.Get()
+	etcd, err := EtcdFromRecord(&rec, conf.Etcd.PathPrefix)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
 
 	etcd.Key = string(key)
-	err = service.EtcdPutItems(etcd)
+	err = EtcdPutItems(etcd)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+
 	}
-	c.JSON(http.StatusOK, gin.H{
+	return c.JSON(http.StatusOK, echo.Map{
 		"msg": "success",
 	})
 }

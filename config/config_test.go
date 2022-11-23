@@ -10,11 +10,9 @@ func TestGet(t *testing.T) {
 
 func TestLoadDefaultConfig(t *testing.T) {
 	loadDefaultConfig(conf)
-	if conf.Host != defaultHost {
-		t.Fatalf("conf.Host!=defaultHost")
-	}
-	if conf.Port != defaultPort {
-		t.Fatalf("conf.Port != defaultPort")
+
+	if conf.Listen != defaultListen {
+		t.Fatalf("conf.Listen != defaultListen")
 	}
 	etcd := conf.Etcd
 	if etcd.PathPrefix != defaultPathPrefix {

@@ -2,12 +2,13 @@ package model
 
 import (
 	"encoding/json"
-	"strings"
 	"testing"
+
+	"github.com/miekg/dns"
 )
 
 func TestRecordMarshalJSON(t *testing.T) {
-	r := Record{TypeA, 10, 12, "test", "1.1.1.1", "/core.com.test", "core"}
+	r := Record{Type(dns.TypeA), 10, 12, "test", "1.1.1.1", "/core.com.test"}
 	_, err := json.Marshal(r)
 	if err != nil {
 		t.Fatal(err)
@@ -20,18 +21,4 @@ func TestRecordUnmarshalJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func TestReSrv(t *testing.T) {
-	if reSRV.MatchString("1122 333222") {
-		t.Fatal()
-	}
-	if reSRV.MatchString("1122 333222") {
-		t.Fatal()
-	}
-	if !reSRV.MatchString("1122 333 wwww") {
-		t.Fatal()
-	}
-	ss := reSRV.FindStringSubmatch(strings.Trim("1122 333 213.2.3. ", " ."))
-	t.Fatal(len(ss), ss[3])
 }
