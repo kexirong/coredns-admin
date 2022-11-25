@@ -26,15 +26,12 @@ func GetDomains(c echo.Context) error {
 	if err != nil {
 		log.Println("err: ", err)
 		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"msg": err.Error(),
+			"reason": err.Error(),
 		})
 
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
-		"msg":  "success",
-		"data": ds,
-	})
+	return c.JSON(http.StatusOK, ds)
 }
 
 func domains(path string, deep uint8) (tree *model.Domain, err error) {

@@ -156,39 +156,37 @@ func DeleteRecord(c echo.Context) error {
 	key, _ := base64.RawURLEncoding.DecodeString(pk)
 
 	if string(key) == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Key field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "Empty value for Key field"})
 
 	}
 	err := service.EtcdDelete(string(key))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
 
-	return c.JSON(http.StatusNoContent, echo.Map{
-		"msg": "success",
-	})
+	return c.NoContent(http.StatusNoContent)
 }
 
 func PutRecord(c echo.Context) error {
 	key, err := base64.RawURLEncoding.DecodeString(c.Param("key"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
 	var rec model.Record
 
 	err = c.Bind(&rec)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
 	if rec.Name == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Name field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "Empty value for Name field"})
 
 	}
 	if rec.Content == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Content field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "Empty value for Content field"})
 
 	}
 
@@ -196,17 +194,15 @@ func PutRecord(c echo.Context) error {
 	var conf = config.Get()
 	etcd, err := EtcdFromRecord(&rec, conf.Etcd.PathPrefix)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
 
 	etcd.Key = string(key)
 	err = EtcdPutItems(etcd)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
-	return c.JSON(http.StatusOK, echo.Map{
-		"msg": "success",
-	})
+	return c.NoContent(http.StatusNoContent)
 }

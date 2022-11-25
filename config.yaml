@@ -1,7 +1,7 @@
  
 listen: :8088
 username: "admin"
-passwotd: "123"
+password: "123"
 etcd:
     endpoint   : [http://192.168.0.165:2379]
     path_prefix : /coredns
