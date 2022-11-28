@@ -1,5 +1,7 @@
-import { Space, Form, Button, Input, Card,Layout } from '@arco-design/web-vue'
-import { FormItem, CardMeta,LayoutContent,LayoutHeader,LayoutSider } from '@arco-design/web-vue/es'
+import { Space, Form, Button, Input, Card, Layout, Menu, Dropdown } from '@arco-design/web-vue'
+import { FormItem, CardMeta, LayoutContent, LayoutHeader, LayoutSider, MenuItem, SubMenu, } from '@arco-design/web-vue/es'
+import DOption from '@arco-design/web-vue/es/dropdown/dropdown-option'
+
 import { App } from 'vue'
 export default (app: App<Element>) => {
     app.component('AForm', Form)
@@ -13,4 +15,9 @@ export default (app: App<Element>) => {
     app.component('ALayoutContent', LayoutContent)
     app.component('ALayoutHeader', LayoutHeader)
     app.component('ALayoutSider', LayoutSider)
+    app.component('AMenu', Menu)
+    app.component('AMenuItem', MenuItem)
+    app.component('ASubMenu', SubMenu)
+    app.component('ADropdown', Dropdown)
+    app.component('ADOption', DOption)
 }

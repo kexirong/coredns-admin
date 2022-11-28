@@ -6,10 +6,11 @@
     <a-layout has-sider position="absolute" style="top: 56px;">
       <a-layout-sider bordered :width="240" collapse-mode="width" :collapsed-width="64"
         v-model:collapsed="store.collapsed" :native-scrollbar="false">
-        <!-- <n-menu :collapsed="store.collapsed" @update:value="handleUpdateValue" :options="menuOptions"
-          v-model:value="active" default-expand-all /> -->
+        <a-menu :collapsed="store.collapsed" @update:value="handleUpdateValue">
+          <MenuItems :routes="routes" />
+        </a-menu>
       </a-layout-sider>
-      <a-layout-content content-style="padding: 16px; height: 100%" embedded :native-scrollbar="false"  >
+      <a-layout-content content-style="padding: 16px; height: 100%" embedded :native-scrollbar="false">
         <!-- <router-view :key="$route.fullPath" /> -->
         <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in" appear>
@@ -21,21 +22,19 @@
   </a-layout>
 </template>
 <script setup lang="ts">
- 
- 
-
 import { h, ref } from 'vue'
-
+import type { SetupContext, VNode, RendererNode, RendererElement } from 'vue'
 
 import { useRouter, useRoute } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+
+import { MenuItem, SubMenu } from '@arco-design/web-vue'
 import { useMainStore } from '@/stores'
 
 import Header from './common/Header.vue'
 import icons from '@/assets/icons'
 import { routes } from "@/router"
 
-const menuOptions = ref<MenuOption[]>()
 
 // const expandedKeys: string[] = []
 
@@ -52,7 +51,7 @@ function handleUpdateValue(key: string) {
   router.push({ name: key })
 }
 
-function hasChildren(item: MenuOption | RouteRecordRaw) {
+function hasChildren(item: RouteRecordRaw) {
   return Boolean(item.children && item.children.length)
 }
 
@@ -66,36 +65,63 @@ function checkPermission(item: RouteRecordRaw, userLevel: string) {
 function setIcon(iconName: string) {
   const icon = icons[iconName]
   if (icon) {
-    return () => h(NIcon, null, { default: () => h(icon) })
+    return () => h(icon)
   }
 }
 
-
-
-function getMenu(routes: RouteRecordRaw[] | undefined, userLevel: string): MenuOption[] {
-  const menu: MenuOption[] = []
-  if (!routes) {
-    return menu
+interface Props {
+  routes: RouteRecordRaw[]
+  role?: string
+}
+type Node = VNode<RendererNode, RendererElement, { [key: string]: any; }>
+function MenuItems(props: Readonly<Props>, context: SetupContext) {
+  const menuItems: Node[] = []
+  if (!props.routes) {
+    return menuItems
   }
-  for (let i of routes) {
-    if (!i.meta || i.meta.hideInMenu || !checkPermission(i, userLevel)) {
-      continue
-    }
-    let item: MenuOption = { label: i.meta.locale, key: i.name as string, icon: setIcon(i.meta.icon as string), }
-    if (hasChildren(i)) {
-      item.children = getMenu(i.children, userLevel)
-    }
-    if (i.meta.flatChildrenInMenu && hasChildren(item)) {
-      menu.push(...item.children as MenuOption[])
-    } else {
-      menu.push(item)
+  function travel(_route: RouteRecordRaw[], nodes: Node[]) {
+    for (let i of props.routes) {
+      if (i.meta?.hideInMenu || !checkPermission(i, props.role as string)) {
+        continue
+      }
+
+      if (hasChildren(i)) {
+        if (i.meta?.flatChildrenInMenu) {
+          for (let child of i.children as RouteRecordRaw[]) {
+            const item = h(MenuItem, { key: child.name as string }, { icon: () => setIcon(<string>child.meta?.icon), default: () => { child.meta?.locale } })
+            nodes.push(item)
+          }
+        } else {
+          const children: never[] = []
+          travel(i.children as RouteRecordRaw[], children)
+          const item = h(SubMenu, { key: i.name as string }, { icon: () => setIcon(<string>i.meta?.icon), default: () => children })
+          nodes.push(item)
+        }
+
+      }
+      else {
+        const item = h(MenuItem, { key: i.name as string }, { icon: () => setIcon(<string>i.meta?.icon), default: () => { i.meta?.locale } })
+        nodes.push(item)
+      }
     }
   }
 
-  return menu
+  return menuItems
 }
 
-menuOptions.value = getMenu(routes, store.userClaims.level)
+
 
 </script>
 
+
+<style scoped lang="less">
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

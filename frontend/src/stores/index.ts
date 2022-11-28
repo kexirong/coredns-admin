@@ -20,6 +20,7 @@ export const useMainStore = defineStore('main', {
     return {
       token: "",
       collapsed: false,
+      darkMode: false,
     }
   },
   getters: {
