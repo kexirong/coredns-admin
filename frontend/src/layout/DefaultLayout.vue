@@ -1,23 +1,26 @@
 <template>
-  <a-layout position="absolute">
-    <a-layout-header class="h-56px" bordered>
+  <a-layout class="h-full">
+    <a-layout-header class="h-56px  z-999">
       <Header />
     </a-layout-header>
-    <a-layout has-sider position="absolute" style="top: 56px;">
-      <a-layout-sider bordered :width="240" collapse-mode="width" :collapsed-width="64"
-        v-model:collapsed="store.collapsed" :native-scrollbar="false">
-        <a-menu :collapsed="store.collapsed" @update:value="handleUpdateValue">
+    <a-layout has-sider style="top: 56px;">
+      <a-layout-sider :width="240" v-model:collapsed="store.collapsed" breakpoint="xl">
+        <a-menu :collapsed="store.collapsed" @update:value="handleUpdateValue" breakpoint="xl">
           <MenuItems :routes="routes" />
         </a-menu>
       </a-layout-sider>
-      <a-layout-content content-style="padding: 16px; height: 100%" embedded :native-scrollbar="false">
+
+      <a-layout-content class="bg-#fafafc p-14px">
+
         <!-- <router-view :key="$route.fullPath" /> -->
         <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in" appear>
             <component :is="Component" :key="route.fullPath" />
           </transition>
         </router-view>
+
       </a-layout-content>
+
     </a-layout>
   </a-layout>
 </template>
@@ -28,7 +31,7 @@ import type { SetupContext, VNode, RendererNode, RendererElement } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
-import { MenuItem, SubMenu } from '@arco-design/web-vue'
+import { MenuItem, SubMenu } from '@arco-design/web-vue/es'
 import { useMainStore } from '@/stores'
 
 import Header from './common/Header.vue'
@@ -62,10 +65,10 @@ function checkPermission(item: RouteRecordRaw, userLevel: string) {
   return false
 }
 
-function setIcon(iconName: string) {
+function getIcon(iconName: string) {
   const icon = icons[iconName]
   if (icon) {
-    return () => h(icon)
+    return h(icon, { class: { 'arco-icon': true } })
   }
 }
 
@@ -79,8 +82,8 @@ function MenuItems(props: Readonly<Props>, context: SetupContext) {
   if (!props.routes) {
     return menuItems
   }
-  function travel(_route: RouteRecordRaw[], nodes: Node[]) {
-    for (let i of props.routes) {
+  function travel(routes: RouteRecordRaw[], nodes: Node[]) {
+    for (let i of routes) {
       if (i.meta?.hideInMenu || !checkPermission(i, props.role as string)) {
         continue
       }
@@ -88,24 +91,24 @@ function MenuItems(props: Readonly<Props>, context: SetupContext) {
       if (hasChildren(i)) {
         if (i.meta?.flatChildrenInMenu) {
           for (let child of i.children as RouteRecordRaw[]) {
-            const item = h(MenuItem, { key: child.name as string }, { icon: () => setIcon(<string>child.meta?.icon), default: () => { child.meta?.locale } })
+            const item = h(MenuItem, { key: child.name as string }, { icon: () => getIcon(<string>child.meta?.icon), default: () => child.meta?.locale })
             nodes.push(item)
           }
         } else {
           const children: never[] = []
           travel(i.children as RouteRecordRaw[], children)
-          const item = h(SubMenu, { key: i.name as string }, { icon: () => setIcon(<string>i.meta?.icon), default: () => children })
+          const item = h(SubMenu, { key: i.name as string }, { icon: () => getIcon(<string>i.meta?.icon), title: () => i.meta?.locale, default: () => children })
           nodes.push(item)
         }
 
       }
       else {
-        const item = h(MenuItem, { key: i.name as string }, { icon: () => setIcon(<string>i.meta?.icon), default: () => { i.meta?.locale } })
+        const item = h(MenuItem, { key: i.name as string }, { icon: () => getIcon(<string>i.meta?.icon), default: () => i.meta?.locale })
         nodes.push(item)
       }
     }
   }
-
+  travel(props.routes, menuItems)
   return menuItems
 }
 
@@ -114,7 +117,7 @@ function MenuItems(props: Readonly<Props>, context: SetupContext) {
 </script>
 
 
-<style scoped lang="less">
+<style  lang="less">
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease-in-out;
@@ -123,5 +126,20 @@ function MenuItems(props: Readonly<Props>, context: SetupContext) {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-4);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-neutral-6);
+  border-radius: 10px;
 }
 </style>

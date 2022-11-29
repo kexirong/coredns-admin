@@ -7,5 +7,5 @@ import (
 
 func RegistRoute(g *echo.Group) {
 	v1 := g.Group("/v1")
-	etcd_v1.RegistRoute(v1)
+	etcd_v1.RegistRoute(v1.Group("/etcd"))
 }

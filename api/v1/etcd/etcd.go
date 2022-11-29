@@ -176,7 +176,7 @@ func EtcdGetItems(path string) (ex []*Etcd, err error) {
 	return ex, nil
 }
 
-func EtcdPutItems(etcd *Etcd) (err error) {
+func EtcdPutItem(etcd *Etcd) (err error) {
 
 	value, err := json.Marshal(etcd)
 	if err != nil {

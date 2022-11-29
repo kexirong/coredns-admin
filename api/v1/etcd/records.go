@@ -31,7 +31,7 @@ func GetRecords(c echo.Context) error {
 	if err != nil {
 		log.Println("err: ", err)
 		return c.JSON(http.StatusInternalServerError, echo.Map{
-			"msg": err.Error(),
+			"reason": err.Error(),
 		})
 	}
 	data := []*model.Record{}
@@ -42,10 +42,7 @@ func GetRecords(c echo.Context) error {
 		}
 		data = append(data, r)
 	}
-	return c.JSON(http.StatusOK, echo.Map{
-		"msg":  "success",
-		"data": data,
-	})
+	return c.JSON(http.StatusOK, data)
 }
 
 func PostRecord(c echo.Context) error {
@@ -53,15 +50,15 @@ func PostRecord(c echo.Context) error {
 	var conf = config.Get()
 	err := c.Bind(&rec)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
 	if rec.Name == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Name field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "Empty value for Name field"})
 
 	}
 	if rec.Content == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Empty value for Content field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "Empty value for Content field"})
 
 	}
 	// if rec.Type.String() == `""` {
@@ -72,13 +69,13 @@ func PostRecord(c echo.Context) error {
 
 	etcd, err := EtcdFromRecord(&rec, conf.Etcd.PathPrefix)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
 	kvs, err := service.EtcdGetKvs(etcd.Key)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
 
@@ -97,19 +94,19 @@ func PostRecord(c echo.Context) error {
 
 			err := service.EtcdPutKvs(abKvs, true)
 			if err != nil {
-				return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+				return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 			}
 		}
 		etcd.Key += "/" + growBasicPrefix(bp)
 	}
-	err = EtcdPutItems(etcd)
+	err = EtcdPutItem(etcd)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"msg": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 
 	}
 	return c.JSON(http.StatusOK, echo.Map{
-		"msg": "success",
+		"key": etcd.Key,
 	})
 }
 
@@ -199,7 +196,7 @@ func PutRecord(c echo.Context) error {
 	}
 
 	etcd.Key = string(key)
-	err = EtcdPutItems(etcd)
+	err = EtcdPutItem(etcd)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 

@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { AxiosResponse } from 'axios'
 import { Base64 } from 'js-base64'
 import { login } from '../api/user'
 
@@ -43,7 +42,7 @@ export const useMainStore = defineStore('main', {
   actions: {
     async Login(username: string, password: string) {
       return await login({ username: username.trim(), password })
-        .then((response: AxiosResponse) => {
+        .then((response) => {
           const data = response.data
           this.token = data.access_token
           return true

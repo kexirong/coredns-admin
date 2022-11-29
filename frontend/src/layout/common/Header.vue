@@ -1,11 +1,8 @@
 <template>
     <div class="header-container flex-y-center h-full">
         <div class="w-240px flex-center text-primary">
-
-            <CrisisAlert />
-
-            <span class="font-600 ml-8px">通知分发器
-            </span>
+            <CrisisAlert class="arco-icon" />
+            <span class="font-600 ml-8px">CoreDNS Admin </span>
         </div>
         <div class="flex-1 flex-y-center cursor-pointer">
             <div @click="store.collapsed = !store.collapsed">
@@ -18,7 +15,7 @@
             <a-dropdown @select="handleDropdown" trigger="click">
                 <div class="flex-center px-12px cursor-pointer">
                     <DefaultAvatar />
-                    <span class="pl-8px text-18px font-500">{{ store.userClaims.name }}</span>
+                    <span class="pl-8px text-18px font-500">{{ store.account }}</span>
                 </div>
                 <template #content>
                     <a-doption value="logout">
@@ -71,8 +68,9 @@ function handleDropdown(key: string) {
 
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .header-container {
-    box-shadow: 0 1px 2px rgb(0 21 41 / 8%)
+    box-shadow: 0 1px 2px var(--color-border);
+    background: var(--color-fill-2)
 }
 </style>
