@@ -14,7 +14,7 @@ func TestGetEtcd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	value, err := EtcdGet("/user/coredns/admin")
+	value, err := EtcdGet("/coredns")
 	if err != nil {
 		t.Fatal(err)
 	}

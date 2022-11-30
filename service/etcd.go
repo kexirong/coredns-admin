@@ -15,7 +15,7 @@ import (
 	"go.etcd.io/etcd/pkg/transport"
 )
 
-var client *etcdcv3.Client
+var etcdClient *etcdcv3.Client
 
 //EtcdInitClient Must first call this function
 func EtcdInitClient(conf *config.Config) (err error) {
@@ -28,11 +28,11 @@ func EtcdInitClient(conf *config.Config) (err error) {
 			TrustedCAFile: etcd.TLS[2],
 		}
 		tlsConfig, err = tlsInfo.ClientConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	if err != nil {
-		log.Fatal(err)
-	}
 	etcdCfg := etcdcv3.Config{
 		Endpoints: etcd.Endpoint,
 		TLS:       tlsConfig,
@@ -40,25 +40,29 @@ func EtcdInitClient(conf *config.Config) (err error) {
 		Password:  etcd.Password,
 	}
 
-	client, err = etcdcv3.New(etcdCfg)
+	etcdClient, err = etcdcv3.New(etcdCfg)
 	if err != nil {
 		return err
+	}
+
+	if etcd.Timeout > 0 {
+		etcdTimeout = time.Duration(etcd.Timeout) * time.Second
 	}
 
 	return nil
 }
 
-const etcdTimeout = 5 * time.Second
+var etcdTimeout = 5 * time.Second
 
 //EtcdGetKvs get  etcd keys with path as prifix
 func EtcdGetKvs(path string) ([]*mvccpb.KeyValue, error) {
-	if client == nil {
+	if etcdClient == nil {
 		return nil, errors.New("etcd Client is not initialized")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeout)
 	defer cancel()
-	r, err := client.Get(ctx, path, etcdcv3.WithPrefix())
+	r, err := etcdClient.Get(ctx, path, etcdcv3.WithPrefix())
 
 	if err != nil {
 		return nil, err
@@ -68,24 +72,24 @@ func EtcdGetKvs(path string) ([]*mvccpb.KeyValue, error) {
 }
 
 func EtcdPutKv(key, value string) (err error) {
-	if client == nil {
+	if etcdClient == nil {
 		return errors.New("etcd Client is not initialized")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeout)
 	defer cancel()
-	_, err = client.Put(ctx, key, value)
+	_, err = etcdClient.Put(ctx, key, value)
 
 	return err
 }
 
 func EtcdPutKvs(kvs map[string]string, del bool) (err error) {
-	if client == nil {
+	if etcdClient == nil {
 		return errors.New("etcd Client is not initialized")
 	}
 	if len(kvs) == 0 {
 		return
 	}
-	kvc := etcdcv3.NewKV(client)
+	kvc := etcdcv3.NewKV(etcdClient)
 	var ops []etcdcv3.Op
 	for k, v := range kvs {
 		if del {
@@ -105,22 +109,22 @@ func EtcdPutKvs(kvs map[string]string, del bool) (err error) {
 }
 
 func EtcdDelete(key string) (err error) {
-	if client == nil {
+	if etcdClient == nil {
 		return errors.New("etcd Client is not initialized")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeout)
 	defer cancel()
-	_, err = client.Delete(ctx, key)
+	_, err = etcdClient.Delete(ctx, key)
 
 	return err
 }
 
 func EtcdGet(key string) (value []byte, err error) {
-	if client == nil {
+	if etcdClient == nil {
 		return nil, errors.New("etcd Client is not initialized")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeout)
-	r, err := client.Get(ctx, key)
+	r, err := etcdClient.Get(ctx, key)
 	cancel()
 
 	if r.Count != 1 || err != nil {

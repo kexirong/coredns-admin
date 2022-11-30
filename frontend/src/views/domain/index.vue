@@ -6,6 +6,12 @@
         </a-col>
         <a-col :span="18">
             <a-button type="primary" class="mb-8px" @click="handleAdd"> 添加记录 </a-button>
+            <a-alert title="提示" closable class="mb-8px">
+                <template v-for="(v, i) in description" :key="'desc' + i">
+                    <span v-html="v"  class="block"/>
+                </template>
+            </a-alert>
+
             <a-table :columns="columns" :bordered="false" :data="tableData" :pagination="pagination" :loading="loading">
                 <template #type="{ record }">
                     <a-select v-if="record.action == 'add'" :options="recordTypeOptions" v-model="record.type"
@@ -153,8 +159,7 @@ function onRecordSave(record: RecordData) {
             const key = encodeURI(<string>record.key)
             putRecord(key, record)
                 .then((res) => {
-                    record.key = res.data.key
-                    Message.success('添加成功')
+                    Message.success('保存成功')
                     record.action = undefined
                 })
             break
@@ -162,14 +167,13 @@ function onRecordSave(record: RecordData) {
             postRecord(record)
                 .then((res) => {
                     record.key = res.data.key
-                    Message.success('保存成功')
+                    Message.success('添加成功')
                     record.action = undefined
                 })
             break
         default:
             Message.warning('数据异常')
     }
-
 }
 function onRecordDelete(record: RecordData, rowIndex: number) {
     const key = encodeURI(record.key as string)
@@ -179,4 +183,17 @@ function onRecordDelete(record: RecordData, rowIndex: number) {
             Message.success('删除成功')
         })
 }
+
+const description = [
+    'Name需要填写完整域名（www.baidu.com）。Priority可选填写',
+    'A: &emsp;&emsp;&emsp;&emsp;用于IPv4的A记录，Name填写域名，Content填写IP',
+    'NS: &emsp;&emsp;&emsp;暂不支持',
+    'CNAME: Content填写别名的值',
+    'PTR: &emsp;&emsp;Name填写ip, 如127.0.0.1, Content填写域名',
+    'MX: &emsp;&emsp;&emsp;Content可直接填写ip也可填写域名+该域名的A记录',
+    'TXT: &emsp;&emsp;Content填写txt内容',
+    'AAA: &emsp;&emsp;用于IPv6的A记录',
+    'SRV: &emsp;&emsp;Content格式：weight port target/hostname, 如：10 8080 127.0.0.1/srv.baidu.com'
+]
+
 </script>

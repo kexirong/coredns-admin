@@ -1,4 +1,4 @@
-import { Space, Form, Button, Input, Card, Layout, Menu, Dropdown, Tree, Table, Scrollbar, InputNumber, Select, Popconfirm } from '@arco-design/web-vue'
+import { Space, Form, Button, Input, Card, Layout, Menu, Dropdown, Tree, Table, Scrollbar, InputNumber, Select, Popconfirm, Alert } from '@arco-design/web-vue'
 import { FormItem, CardMeta, LayoutContent, LayoutHeader, LayoutSider, Row, Col, MenuItem, SubMenu } from '@arco-design/web-vue/es'
 import Doption from '@arco-design/web-vue/es/dropdown/dropdown-option'
 
@@ -28,4 +28,5 @@ export default (app: App<Element>) => {
     app.component('AInputNumber', InputNumber)
     app.component('ASelect', Select)
     app.component('APopconfirm', Popconfirm)
+    app.component('AAlert', Alert)
 }

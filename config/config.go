@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-//var filePath = "config.yaml"
+var filePath = "config.yaml"
 
 //Config all config in this
 type Config struct {
@@ -23,7 +23,16 @@ type Config struct {
 		Password   string   `yaml:"password"`
 		Timeout    int      `yaml:"timeout"`
 		TLS        []string `yaml:"tls"`
-	}
+	} `yaml:"etcd"`
+	Redis struct {
+		Addresses      []string `yaml:"addresses"`
+		KeyPrefix      string   `yaml:"key_prefix"`
+		Username       string   `yaml:"username"`
+		Password       string   `yaml:"password"`
+		ConnectTimeout int      `yaml:"connect_timeout"`
+		ReadTimeout    int      `yaml:"read_timeout"`
+		TLS            []string `yaml:"tls"`
+	} `yaml:"redis"`
 }
 
 var conf *Config
@@ -33,23 +42,24 @@ func pathIsExist(path string) bool {
 	return err == nil || os.IsExist(err)
 }
 
-func loadConfig(path string) {
+func loadConfig(path string) *Config {
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
-	err = yaml.Unmarshal([]byte(data), conf)
-	if err != nil {
+
+	conf = new(Config)
+	if err := yaml.Unmarshal([]byte(data), conf); err != nil {
 		log.Fatalf("error: %v", err)
 	}
-
+	return conf
 }
 
 //Get  get a congfig instance
 func Get() *Config {
 	if conf == nil {
-		log.Fatalln("configuration is not initialized")
+		Set(filePath)
 	}
 	return conf
 }
@@ -59,8 +69,6 @@ func Set(filePath string) {
 	if !pathIsExist(filePath) {
 		log.Fatalln("the configuration file does not exist")
 	}
-
-	conf = new(Config)
 
 	loadConfig(filePath)
 	loadDefaultConfig(conf)
