@@ -20,6 +20,11 @@ func main() {
 	config.Set(confPath)
 	conf := config.Get()
 	err := service.EtcdInitClient(conf)
+
+	if err != nil {
+		panic(err)
+	}
+	err = service.RedisInitClient(conf)
 	if err != nil {
 		panic(err)
 	}

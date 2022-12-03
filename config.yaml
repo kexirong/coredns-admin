@@ -3,10 +3,13 @@ listen: :8088
 username: "admin"
 password: "123"
 etcd:
-    endpoint   : [http://192.168.0.165:2379]
-    path_prefix : /coredns
+    endpoint: [http://192.168.0.165:2379]
+    path_prefix: /coredns
     timeout: 5
     #username: ""
     #password: ""
     #tls: [cert,key,ca]
+redis:
+    key_prefix: coredns
+    addresses: [192.168.0.165:6379]
 

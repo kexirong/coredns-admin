@@ -4,20 +4,20 @@ import type { RouteRecordRaw } from 'vue-router'
 import DefaultLayout from '@/layout/DefaultLayout.vue'
 
 
-export const etcd: RouteRecordRaw = {
-    path: '/etcd',
-    name: 'Etcd',
-    redirect: {name:'EtcdDomains'},
+export const redis: RouteRecordRaw = {
+    path: '/redis',
+    name: 'Redis',
+    redirect: {name:'RedisDomains'},
     component: DefaultLayout,
     meta: {
-        locale: 'Etcd',
+        locale: 'Redis',
         icon: 'Prometheus'
     },
     children: [
       {
         path: 'domains',
-        name: 'EtcdDomains',
-        component: () => import('@/views/etcd-domain/index.vue'),
+        name: 'RedisDomains',
+        component: () => import('@/views/redis-domain/index.vue'),
         meta: {
             locale: 'Domains',
             icon: 'Prometheus'

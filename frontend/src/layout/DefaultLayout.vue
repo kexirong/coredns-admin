@@ -5,7 +5,7 @@
     </a-layout-header>
     <a-layout has-sider style="top: 56px;">
       <a-layout-sider :width="240" v-model:collapsed="store.collapsed" breakpoint="xl">
-        <a-menu :collapsed="store.collapsed" @update:value="handleUpdateValue" breakpoint="xl">
+        <a-menu :collapsed="store.collapsed" @menu-item-click="handleUpdateValue" breakpoint="xl">
           <MenuItems :routes="routes" />
         </a-menu>
       </a-layout-sider>
@@ -51,6 +51,7 @@ const store = useMainStore()
 
 
 function handleUpdateValue(key: string) {
+  console.log(key)
   router.push({ name: key })
 }
 

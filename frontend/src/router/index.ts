@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '@/views/login/index.vue'
 import { RouteRecordRaw } from 'vue-router'
 import { etcd } from './routes/etcd'
+import { redis } from './routes/redis'
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
@@ -14,6 +15,7 @@ const routes: Array<RouteRecordRaw> = [
     component: Login
   },
   etcd,
+  redis,
 
 ]
 

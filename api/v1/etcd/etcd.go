@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -17,12 +18,12 @@ import (
 )
 
 //Etcd is etcd's dns record item
-type Etcd struct {
+type etcd struct {
 	msg.Service
 }
 
 // HostType returns the DNS type of what is encoded in the Etcd Host field.
-func (e Etcd) HostType() uint16 {
+func (e etcd) HostType() uint16 {
 
 	if e.Mail {
 		return dns.TypeMX
@@ -59,13 +60,14 @@ func (e Etcd) HostType() uint16 {
 }
 
 //ToRecord   Conversion to Record
-func (e Etcd) ToRecord() *model.Record {
+func (e etcd) ToRecord(keyPrefix string) *model.Record {
+	const sep = "/"
 	r := &model.Record{
 		TTL:      e.TTL,
 		Priority: e.Priority,
 		Key:      e.Key,
 	}
-	keyParts := strings.Split(strings.Trim(e.Key, "/"), "/")
+	keyParts := strings.Split(strings.Trim(e.Key, sep), sep)
 	if len(keyParts) < 2 {
 		return nil
 	}
@@ -79,9 +81,9 @@ func (e Etcd) ToRecord() *model.Record {
 	switch tp {
 	case dns.TypeA, dns.TypeAAAA, dns.TypeCNAME, dns.TypeMX, dns.TypeTXT, dns.TypeSRV, dns.TypePTR:
 		r.Type = model.Type(tp)
-		n := 1
+		n := len(strings.Split(strings.Trim(keyPrefix, sep), sep))
 		if tp == dns.TypePTR {
-			n = 3
+			n += 2
 		}
 		for i, j := n, len(keyParts)-1; i < j; i, j = i+1, j-1 {
 			keyParts[i], keyParts[j] = keyParts[j], keyParts[i]
@@ -107,8 +109,8 @@ func (e Etcd) ToRecord() *model.Record {
 
 var reSRV = regexp.MustCompile(`^(?P<weight>\d+) (?P<port>\d+) (?P<target>\S+)$`)
 
-func EtcdFromRecord(r *model.Record, prefix string) (*Etcd, error) {
-	var e = new(Etcd)
+func EtcdFromRecord(r *model.Record, prefix string) (*etcd, error) {
+	var e = new(etcd)
 	if r.TTL != 0 {
 		e.TTL = r.TTL
 	}
@@ -137,24 +139,25 @@ func EtcdFromRecord(r *model.Record, prefix string) (*Etcd, error) {
 	default:
 		return nil, errors.New("type field invalid")
 	}
-	path := prefix
-	if !strings.HasSuffix(path, "/") {
-		path += "/"
-	}
+	prefixPart := []string{prefix}
+	// if !strings.HasSuffix(_path, "/") {
+	// 	_path += "/"
+	// }
 
 	if uint16(r.Type) == dns.TypePTR {
-		path += "arpa/in-addr/"
+		//_path += "arpa/in-addr/"
+		prefixPart = append(prefixPart, "arpa", "in-addr")
 	}
-	keys := strings.Split(r.Name, ".")
+	keys := dns.SplitDomainName(r.Name)
 	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
 		keys[i], keys[j] = keys[j], keys[i]
 	}
-	e.Key = path + strings.Join(keys, "/")
+	e.Key = path.Join(append(prefixPart, keys...)...)
 	return e, nil
 }
 
 //EtcdGetItems get  etcd items with path as prifix
-func EtcdGetItems(path string) (ex []*Etcd, err error) {
+func EtcdGetItems(path string) (ex []*etcd, err error) {
 	kvs, err := service.EtcdGetKvs(path)
 	if err != nil {
 		return nil, err
@@ -162,7 +165,7 @@ func EtcdGetItems(path string) (ex []*Etcd, err error) {
 
 	for _, kv := range kvs {
 
-		e := new(Etcd)
+		e := new(etcd)
 		e.Key = string(kv.Key)
 
 		if err := json.Unmarshal(kv.Value, e); err != nil {
@@ -176,7 +179,7 @@ func EtcdGetItems(path string) (ex []*Etcd, err error) {
 	return ex, nil
 }
 
-func EtcdPutItem(etcd *Etcd) (err error) {
+func EtcdPutItem(etcd *etcd) (err error) {
 
 	value, err := json.Marshal(etcd)
 	if err != nil {

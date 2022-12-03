@@ -42,10 +42,11 @@ func domains(path string, deep uint8) (tree *model.Domain, err error) {
 	}
 
 	for _, kv := range kvs {
-		if strings.Contains(string(kv.Key), "/arpa/in-addr") || strings.Contains(string(kv.Key), "/dns/ns") {
+		// if strings.Contains(string(kv.Key), "/arpa/in-addr") || strings.Contains(string(kv.Key), "/dns/ns") {
+		if strings.Contains(string(kv.Key), "/dns/ns") {
 			continue
 		}
-		if err := json.Unmarshal(kv.Value, new(Etcd)); err != nil {
+		if err := json.Unmarshal(kv.Value, new(etcd)); err != nil {
 			continue
 		}
 		key := strings.TrimPrefix(string(kv.Key), path)

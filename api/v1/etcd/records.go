@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"encoding/base64"
-	"log"
 	"net/http"
 	"strings"
 
@@ -21,6 +20,7 @@ func GetRecords(c echo.Context) error {
 
 	var conf = config.Get()
 	path := conf.Etcd.PathPrefix
+
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
@@ -29,14 +29,13 @@ func GetRecords(c echo.Context) error {
 	ex, err := EtcdGetItems(path)
 
 	if err != nil {
-		log.Println("err: ", err)
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"reason": err.Error(),
 		})
 	}
 	data := []*model.Record{}
 	for _, e := range ex {
-		r := e.ToRecord()
+		r := e.ToRecord(conf.Etcd.PathPrefix)
 		if r == nil {
 			continue
 		}
@@ -51,7 +50,6 @@ func PostRecord(c echo.Context) error {
 	err := c.Bind(&rec)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
-
 	}
 	if rec.Name == "" {
 		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "Empty value for Name field"})
@@ -65,6 +63,7 @@ func PostRecord(c echo.Context) error {
 	// 	return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Type field invalid"})
 
 	// }
+
 	rec.Content = strings.Trim(rec.Content, " .")
 
 	etcd, err := EtcdFromRecord(&rec, conf.Etcd.PathPrefix)

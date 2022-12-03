@@ -43,18 +43,27 @@ func RedisInitClient(conf *config.Config) (err error) {
 
 func RedisKeys(pattern string) ([]string, error) {
 	if redisClient == nil {
-		return nil, errors.New("etcd Client is not initialized")
+		return nil, errors.New("redis Client is not initialized")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	return redisClient.Keys(ctx, pattern).Result()
 }
 
-func RedisHGetAll(pattern string) (map[string]string, error) {
+func RedisHGetAll(key string) (map[string]string, error) {
 	if redisClient == nil {
-		return nil, errors.New("etcd Client is not initialized")
+		return nil, errors.New("redis Client is not initialized")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	return redisClient.HGetAll(ctx, pattern).Result()
+	return redisClient.HGetAll(ctx, key).Result()
+}
+
+func RedisHGet(key string, field string) (string, error) {
+	if redisClient == nil {
+		return "", errors.New("redis Client is not initialized")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	return redisClient.HGet(ctx, key, field).Result()
 }
