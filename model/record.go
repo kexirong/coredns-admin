@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/miekg/dns"
 )
@@ -48,6 +49,27 @@ func (r *Record) Signature() string {
 	sum = hashAdd(sum, r.Type.String())
 	sum = hashAdd(sum, r.Content)
 	return fmt.Sprintf("%016x", sum)
+}
+
+func (r *Record) MustKey(prefix string) string {
+	if r.Key == "" {
+		var prefixPart []string
+		if prefix != "" {
+			prefixPart = append(prefixPart, prefix)
+		}
+
+		if uint16(r.Type) == dns.TypePTR {
+			prefixPart = append(prefixPart, "arpa", "in-addr")
+		}
+
+		keys := dns.SplitDomainName(r.Name)
+		for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
+			keys[i], keys[j] = keys[j], keys[i]
+		}
+		r.Key = strings.Join(append(prefixPart, keys...), ":")
+	}
+
+	return r.Key
 }
 
 // Inline and byte-free variant of hash/fnv's fnv64a.

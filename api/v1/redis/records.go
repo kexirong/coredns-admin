@@ -61,17 +61,27 @@ func PostRecord(c echo.Context) error {
 	if strings.HasPrefix(rec.Type.String(), "TYPE") {
 		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Type field invalid"})
 	}
-	redis, err := RedisFromRecord(&rec, conf.Redis.KeyPrefix)
+	rItem, err := RedisFromRecord(&rec)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"reason": err.Error()})
 	}
-	hasRedis, err := RedisGetItem(redis.Key)
+
+	rHasItem, err := RedisGetValue(rec.MustKey(conf.Redis.KeyPrefix), rItem.Field)
+
 	if err != nil && err != redisV8.Nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"reason": err.Error()})
 	}
 
+	if err == nil {
+		MergeRedisItem(rItem, rHasItem)
+	}
+	r := rItem.ToRedis(rec.MustKey(conf.Redis.KeyPrefix))
+	err = RedisSet(r)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"reason": err.Error()})
+	}
 	return c.JSON(http.StatusOK, echo.Map{
-		"key": "etcd.Key",
+		"key": r.Key,
 	})
 }
 

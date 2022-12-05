@@ -53,7 +53,7 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { getDomains, DomainsData, getRecord, getRecords, RecordData, postRecord, putRecord, deleteRecord } from '@/api/redis'
+import { getDomains, DomainsData, getRecord, getRecords, RecordData, postRecord, putRecord, deleteRecord, postRecordSignature } from '@/api/redis'
 import type { TreeNodeData, TableData } from '@arco-design/web-vue/es'
 import { Message } from '@arco-design/web-vue'
 import { encodeURI } from 'js-base64'
@@ -177,11 +177,17 @@ function onRecordSave(record: RecordData) {
 }
 function onRecordDelete(record: RecordData, rowIndex: number) {
     const key = encodeURI(record.key as string)
-    deleteRecord(key)
-        .then(() => {
-            tableData.value.splice(rowIndex, 1)
-            Message.success('删除成功')
+    postRecordSignature(record)
+        .then((res) => {
+            console.log(res.data.fingerprint)
+            deleteRecord(key, res.data.fingerprint)
+                .then(() => {
+                    tableData.value.splice(rowIndex, 1)
+                    Message.success('删除成功')
+                })
         })
+        .catch(() => Message.error('获取签名失败'))
+
 }
 
 const description = [

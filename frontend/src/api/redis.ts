@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { AxiosResponse } from 'axios'
+
 export interface DomainsData {
     name: string
     subdomain?: DomainsData[]
@@ -32,10 +33,14 @@ export function putRecord(path: string, data: RecordData) {
     return axios.put(`/api/v1/redis/record/${path}`, data)
 }
 
+export function postRecordSignature(data: RecordData) {
+    return axios.post<{ fingerprint: string }>('/api/v1/redis/record/signature', data)
+}
+
 export function postRecord(data: RecordData) {
     return axios.post<{ key: string }>('/api/v1/redis/record', data)
 }
 
-export function deleteRecord(path: string) {
-    return axios.delete(`/api/v1/redis/record/${path}`)
+export function deleteRecord(path: string, fingerprint: string) {
+    return axios.delete(`/api/v1/redis/record/${path}`, { headers: { fingerprint } })
 }

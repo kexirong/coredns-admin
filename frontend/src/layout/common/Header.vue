@@ -53,8 +53,8 @@ const store = useMainStore()
 
 const router = useRouter()
 
-function handleDropdown(key: string) {
-    switch (key) {
+function handleDropdown(value: string | number | Record<string, any> | undefined) {
+    switch (value) {
         case 'change-password':
             router.push({ name: "UserChangePassword" })
             break

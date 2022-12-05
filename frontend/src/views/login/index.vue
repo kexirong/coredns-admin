@@ -22,7 +22,6 @@
                     </a-form>
                 </template>
             </a-card-meta>
-
         </a-card>
     </div>
 </template>
@@ -44,14 +43,13 @@ const { Login } = useMainStore()
 const router = useRouter()
 const route = useRoute()
 
-async function handleSubmit(
-    { errors, values }:
-        {
-            errors: Record<string, ValidatedError> | undefined
-            values: { username: string, password: string }
-        }
-) {
-    if (errors) return;
+interface Data {
+    values: Record<string, any>
+    errors: Record<string, ValidatedError> | undefined
+}
+
+function handleSubmit({ values, errors }: Data, ev: Event): any {
+    if (errors) return false;
 
     loading.value = true
     Login(values.username, values.password)

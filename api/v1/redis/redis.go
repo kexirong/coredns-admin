@@ -26,7 +26,7 @@ type redisItem struct {
 }
 
 func (i redisItem) ToRedis(key string) *redis {
-	r := &redis{Key: key}
+	r := &redis{Key: key, Items: make(map[string]string)}
 	r.Items[i.Field] = i.Value
 	return r
 }
@@ -43,7 +43,7 @@ func (r redis) ToRecords(keyPrefix string) []*model.Record {
 		keyParts[i], keyParts[j] = keyParts[j], keyParts[i]
 	}
 	kpl := len(keyParts) - len(strings.Split(strings.Trim(keyPrefix, sep), sep))
-	//  keyParts[n:]
+
 	for k, v := range r.Items {
 		tp := dns.StringToType[k]
 		switch tp {
@@ -56,7 +56,7 @@ func (r redis) ToRecords(keyPrefix string) []*model.Record {
 
 			for _, a := range ra {
 				r := &model.Record{
-					// Type:    model.Type(tp),
+					Type:    model.Type(tp),
 					TTL:     a.TTL,
 					Content: a.IP.String(),
 					Key:     r.Key,
@@ -184,22 +184,87 @@ func RedisGetItem(key string) (*redis, error) {
 	return &redis{Key: key, Items: items}, nil
 }
 
+func RedisGetValue(key, field string) (*redisItem, error) {
+
+	value, err := service.RedisHGet(key, field)
+	if err != nil {
+		return nil, err
+	}
+	return &redisItem{Field: field, Value: value}, nil
+}
+
+func MergeRedisItem(itemA, itemB *redisItem) error {
+	if itemA.Field != itemB.Field {
+		return errors.New("itemA's Field is not equal to that of itemB")
+	}
+	var value []byte
+	var err error
+	switch itemA.Field {
+	case "A", "AAAA":
+		value, err = mergeJson[credis.ItemIP]([]byte(itemA.Value), []byte(itemB.Value))
+
+	case "CNAME", "NS", "PTR":
+		value, err = mergeJson[credis.ItemHost]([]byte(itemA.Value), []byte(itemB.Value))
+
+	case "TXT":
+		value, err = mergeJson[credis.ItemText]([]byte(itemA.Value), []byte(itemB.Value))
+
+	case "MX":
+		value, err = mergeJson[credis.ItemMX]([]byte(itemA.Value), []byte(itemB.Value))
+
+	case "SRV":
+		value, err = mergeJson[credis.ItemSRV]([]byte(itemA.Value), []byte(itemB.Value))
+
+	case "CAA":
+		value, err = mergeJson[credis.ItemCAA]([]byte(itemA.Value), []byte(itemB.Value))
+
+	default:
+		err = errors.New("class field invalid")
+	}
+	if err != nil {
+		return err
+	}
+	itemA.Value = string(value)
+	return nil
+}
+
+type item interface {
+	credis.ItemIP | credis.ItemHost | credis.ItemText | credis.ItemMX | credis.ItemCAA | credis.ItemSRV
+}
+
+func mergeJson[T item](item1, item2 []byte) ([]byte, error) {
+	var iis1 []T
+	var iis2 []T
+	err := json.Unmarshal(item1, &iis1)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(item2, &iis2)
+	if err != nil {
+		return nil, err
+	}
+	iis1 = append(iis1, iis2...)
+	return json.Marshal(iis1)
+
+}
+
 var reSRV = regexp.MustCompile(`^(?P<weight>\d+) (?P<port>\d+) (?P<target>\S+)$`)
 var reCAA = regexp.MustCompile(`^(?P<flag>\d+) (?P<tag>\w+) (?P<value>\S+)$`)
 
-func RedisFromRecord(record *model.Record, prefix string) (*redis, error) {
-	var r = new(redis)
-	if record.Key != "" {
-		r.Key = record.Key
-	}
+func RedisFromRecord(record *model.Record) (*redisItem, error) {
+	var ri *redisItem
+
 	switch uint16(record.Type) {
 	case dns.TypeA, dns.TypeAAAA:
 		var ii credis.ItemIP
 		ii.IP = net.ParseIP(record.Content)
+		if ii.IP == nil {
+			return nil, errors.New("failed to parse content")
+		}
 		ii.TTL = record.TTL
 		tp := record.Type.String()
 		val, _ := json.Marshal(&credis.RecordA{ii})
-		r.Items[tp] = string(val)
+		ri = &redisItem{Field: tp, Value: string(val)}
 
 	case dns.TypeCNAME, dns.TypeNS, dns.TypePTR:
 		var ih credis.ItemHost
@@ -207,7 +272,7 @@ func RedisFromRecord(record *model.Record, prefix string) (*redis, error) {
 		ih.TTL = record.TTL
 		tp := record.Type.String()
 		val, _ := json.Marshal(&credis.RecordCNANE{ih})
-		r.Items[tp] = string(val)
+		ri = &redisItem{Field: tp, Value: string(val)}
 
 	case dns.TypeTXT:
 		var it credis.ItemText
@@ -215,7 +280,7 @@ func RedisFromRecord(record *model.Record, prefix string) (*redis, error) {
 		it.TTL = record.TTL
 		tp := record.Type.String()
 		val, _ := json.Marshal(&credis.RecordTXT{it})
-		r.Items[tp] = string(val)
+		ri = &redisItem{Field: tp, Value: string(val)}
 
 	case dns.TypeMX:
 		var im credis.ItemMX
@@ -224,7 +289,7 @@ func RedisFromRecord(record *model.Record, prefix string) (*redis, error) {
 		im.Preference = uint16(record.Priority)
 		tp := record.Type.String()
 		val, _ := json.Marshal(&credis.RecordMX{im})
-		r.Items[tp] = string(val)
+		ri = &redisItem{Field: tp, Value: string(val)}
 
 	case dns.TypeSRV:
 		var im credis.ItemSRV
@@ -243,7 +308,7 @@ func RedisFromRecord(record *model.Record, prefix string) (*redis, error) {
 		im.Priority = uint16(record.Priority)
 		tp := record.Type.String()
 		val, _ := json.Marshal(&credis.RecordSRV{im})
-		r.Items[tp] = string(val)
+		ri = &redisItem{Field: tp, Value: string(val)}
 
 	case dns.TypeCAA:
 		var ic credis.ItemCAA
@@ -260,26 +325,16 @@ func RedisFromRecord(record *model.Record, prefix string) (*redis, error) {
 
 		tp := record.Type.String()
 		val, _ := json.Marshal(&credis.RecordCAA{ic})
-		r.Items[tp] = string(val)
+		ri = &redisItem{Field: tp, Value: string(val)}
 
 	default:
 		return nil, errors.New("type field invalid")
 	}
 
-	var prefixPart []string
-	if prefix != "" {
-		prefixPart = append(prefixPart, prefix)
-	}
+	return ri, nil
+}
 
-	if uint16(record.Type) == dns.TypePTR {
-		prefixPart = append(prefixPart, "arpa", "in-addr")
-	}
-
-	keys := dns.SplitDomainName(record.Name)
-	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
-		keys[i], keys[j] = keys[j], keys[i]
-	}
-	r.Key = strings.Join(append(prefixPart, keys...), ":")
-
-	return r, nil
+func RedisSet(r *redis) error {
+	_, err := service.RedisHSet(r.Key, r.Items)
+	return err
 }

@@ -59,11 +59,29 @@ func RedisHGetAll(key string) (map[string]string, error) {
 	return redisClient.HGetAll(ctx, key).Result()
 }
 
-func RedisHGet(key string, field string) (string, error) {
+func RedisHSet(key string, values map[string]string) (int64, error) {
+	if redisClient == nil {
+		return 0, errors.New("redis Client is not initialized")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	return redisClient.HSet(ctx, key, values).Result()
+}
+
+func RedisHGet(key, field string) (string, error) {
 	if redisClient == nil {
 		return "", errors.New("redis Client is not initialized")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	return redisClient.HGet(ctx, key, field).Result()
+}
+
+func RedisHDel(key string, fields ...string) (int64, error) {
+	if redisClient == nil {
+		return 0, errors.New("redis Client is not initialized")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	return redisClient.HDel(ctx, key, fields...).Result()
 }

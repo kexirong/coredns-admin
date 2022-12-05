@@ -11,6 +11,6 @@ func RegistRoute(g *echo.Group) {
 	g.POST("/record", PostRecord)
 	g.DELETE("/record/:key", DeleteRecord)
 	g.PUT("/record/:key", PutRecord)
-	g.POST("/record/signature", PostRecord)
+	g.POST("/record/signature", PostRecordSignature)
 	g.GET("/domains", GetDomains)
 }
