@@ -41,7 +41,7 @@
                         <a-button @click="onCancel(record, rowIndex)" type="primary">取消</a-button>
                     </a-space>
                     <a-space v-else>
-                        <a-button @click="record.action = 'edit'" type="primary" status="success">编辑</a-button>
+                        <a-button @click="handleToEdit(record)" type="primary" status="success">编辑</a-button>
                         <a-popconfirm content="删除后不可恢复" type="warning" @ok="onRecordDelete(record, rowIndex)">
                             <a-button type="primary" status="danger">删除</a-button>
                         </a-popconfirm>
@@ -151,14 +151,26 @@ function onTreeSelect(keys: (string | number)[]) {
             () => { loading.value = false }
         )
 }
+function handleToEdit(record: RecordData) {
+    if (!record.fingerprint) {
+        postRecordSignature(record)
+            .then((res) => {
+                record.fingerprint = res.data.fingerprint
+                record.action = 'edit'
+            })
+            .catch(() => Message.error('旧数据签名失败'))
+    } else {
+        record.action = 'edit'
+    }
+}
 function onRecordSave(record: RecordData) {
     console.log(record)
 
     switch (record.action) {
         case 'edit':
             const key = encodeURI(<string>record.key)
-            putRecord(key, record)
-                .then((res) => {
+            putRecord(key, record.fingerprint as string, record)
+                .then(() => {
                     Message.success('保存成功')
                     record.action = undefined
                 })
@@ -193,7 +205,7 @@ function onRecordDelete(record: RecordData, rowIndex: number) {
 const description = [
     'Name需要填写完整域名（www.baidu.com）。Priority可选填写',
     'A: &emsp;&emsp;&emsp;&emsp;用于IPv4的A记录，Name填写域名，Content填写IP',
-    'NS: &emsp;&emsp;&emsp;暂不支持',
+    'NS: &emsp;&emsp;&emsp;',
     'CNAME: Content填写别名的值',
     'PTR: &emsp;&emsp;Name填写ip, 如127.0.0.1, Content填写域名',
     'MX: &emsp;&emsp;&emsp;Content可直接填写ip也可填写域名+该域名的A记录',

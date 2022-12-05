@@ -46,22 +46,22 @@ func GetRecords(c echo.Context) error {
 }
 
 func PostRecord(c echo.Context) error {
-	var rec model.Record
+	var rec = new(model.Record)
 	var conf = config.Get()
-	err := c.Bind(&rec)
+	err := c.Bind(rec)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 	}
 	if rec.Name == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "empty value for Name field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "name field empty"})
 	}
 	if rec.Content == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "empty value for Content field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "content field empty"})
 	}
 	if strings.HasPrefix(rec.Type.String(), "TYPE") {
 		return c.JSON(http.StatusBadRequest, echo.Map{"msg": "Type field invalid"})
 	}
-	rItem, err := RedisFromRecord(&rec)
+	rItem, err := RedisItemFromRecord(rec)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"reason": err.Error()})
 	}
@@ -102,12 +102,13 @@ func DeleteRecord(c echo.Context) error {
 	pk := c.Param("key")
 
 	key, _ := base64.RawURLEncoding.DecodeString(pk)
+	var conf = config.Get()
 
-	if string(key) == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "empty value for KEY field"})
-
+	fingerprint := c.Request().Header.Get("fingerprint")
+	err := RedisDelItem(conf.Redis.KeyPrefix, string(key), fingerprint)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
 	}
-
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -115,21 +116,29 @@ func PutRecord(c echo.Context) error {
 	key, err := base64.RawURLEncoding.DecodeString(c.Param("key"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
-
 	}
-	var rec model.Record
+	var rec = new(model.Record)
 
-	err = c.Bind(&rec)
+	err = c.Bind(rec)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
-
+	}
+	if rec.Key != string(key) {
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "invalid key"})
 	}
 	if rec.Name == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "empty value for NAME field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "name field empty"})
 	}
 	if rec.Content == "" {
-		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "empty value for CONTENT field"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "content field empty"})
 	}
-	_ = key
+
+	var conf = config.Get()
+
+	fingerprint := c.Request().Header.Get("fingerprint")
+	err = RedisUpdate(conf.Redis.KeyPrefix, fingerprint, rec)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})
+	}
 	return c.NoContent(http.StatusNoContent)
 }

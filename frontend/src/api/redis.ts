@@ -15,6 +15,7 @@ export interface RecordData {
     content: string
     key?: string
     action?: 'add' | 'edit'
+    fingerprint?:string
 }
 
 export function getDomains() {
@@ -25,12 +26,12 @@ export function getRecords() {
     return axios.get<RecordData[]>('/api/v1/redis/records')
 }
 
-export function getRecord(path: string) {
-    return axios.get<RecordData[]>(`/api/v1/redis/record/${path}`)
+export function getRecord(key: string) {
+    return axios.get<RecordData[]>(`/api/v1/redis/record/${key}`)
 }
 
-export function putRecord(path: string, data: RecordData) {
-    return axios.put(`/api/v1/redis/record/${path}`, data)
+export function putRecord(key: string, fingerprint: string, data: RecordData) {
+    return axios.put(`/api/v1/redis/record/${key}`, data, { headers: { fingerprint } })
 }
 
 export function postRecordSignature(data: RecordData) {
@@ -41,6 +42,6 @@ export function postRecord(data: RecordData) {
     return axios.post<{ key: string }>('/api/v1/redis/record', data)
 }
 
-export function deleteRecord(path: string, fingerprint: string) {
-    return axios.delete(`/api/v1/redis/record/${path}`, { headers: { fingerprint } })
+export function deleteRecord(key: string, fingerprint: string) {
+    return axios.delete(`/api/v1/redis/record/${key}`, { headers: { fingerprint } })
 }

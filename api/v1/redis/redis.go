@@ -251,7 +251,7 @@ func mergeJson[T item](item1, item2 []byte) ([]byte, error) {
 var reSRV = regexp.MustCompile(`^(?P<weight>\d+) (?P<port>\d+) (?P<target>\S+)$`)
 var reCAA = regexp.MustCompile(`^(?P<flag>\d+) (?P<tag>\w+) (?P<value>\S+)$`)
 
-func RedisFromRecord(record *model.Record) (*redisItem, error) {
+func RedisItemFromRecord(record *model.Record) (*redisItem, error) {
 	var ri *redisItem
 
 	switch uint16(record.Type) {
@@ -337,4 +337,87 @@ func RedisFromRecord(record *model.Record) (*redisItem, error) {
 func RedisSet(r *redis) error {
 	_, err := service.RedisHSet(r.Key, r.Items)
 	return err
+}
+
+func RedisDelItem(keyPrefix, key, fingerprint string) error {
+	r, err := RedisGetItem(key)
+	if err != nil {
+		return err
+	}
+	var typeFilter model.Type
+	records := r.ToRecords(keyPrefix)
+
+	for _, record := range records {
+		if record.Signature() == fingerprint {
+			typeFilter = record.Type
+			break
+		}
+	}
+	if typeFilter == 0 {
+		return errors.New("fingerprint invalid")
+	}
+	j := 0
+	for _, record := range records {
+		if record.Type == typeFilter && record.Signature() != fingerprint {
+			records[j] = record
+			j++
+		}
+	}
+	records = records[:j]
+
+	if len(records) == 0 {
+		_, err := service.RedisHDel(key, typeFilter.String())
+		return err
+	}
+	ri, err := RecordToRedisItem(records)
+	if err != nil {
+		return err
+	}
+	return RedisSet(ri.ToRedis(key))
+}
+
+func RedisUpdate(keyPrefix, fingerprint string, record *model.Record) error {
+	ri, err := RedisGetValue(record.Key, record.Type.String())
+	if err != nil {
+		return err
+	}
+	rd := ri.ToRedis(record.Key)
+	records := rd.ToRecords(keyPrefix)
+	var updated bool
+	for _, r := range records {
+		if r.Signature() == fingerprint {
+			r.Content = record.Content
+			r.TTL = record.TTL
+			r.Priority = record.Priority
+			updated = true
+			break
+		}
+	}
+	if !updated {
+		return errors.New("fingerprint invalid")
+	}
+	ri, err = RecordToRedisItem(records)
+	if err != nil {
+		return err
+	}
+
+	return RedisSet(ri.ToRedis(record.Key))
+}
+
+func RecordToRedisItem(records []*model.Record) (*redisItem, error) {
+	item0, err := RedisItemFromRecord(records[0])
+	if err != nil {
+		return nil, err
+	}
+	for i := 1; i < len(records); i++ {
+		item1, err := RedisItemFromRecord(records[i])
+		if err != nil {
+			return nil, err
+		}
+		err = MergeRedisItem(item0, item1)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return item0, nil
 }
