@@ -33,13 +33,8 @@ func main() {
 
 	e := echo.New()
 	e.HTTPErrorHandler = customHTTPErrorHandler
-
-	e.Static("/js", "./dist/js")
-	e.Static("/css", "./dist/css")
-	e.Static("/fonts", "./dist/fonts")
-	e.File("/favicon.ico", "./dist/favicon.ico")
-	e.File("/*", "./dist/index.html")
-
+	e.Static("/assets", "dist/assets")
+	e.File("/*", "dist/index.html")
 	e.Use(middleware.CORS())
 	e.POST("/login", controller.Login)
 	g := e.Group("/api", kcm.JWT())
@@ -60,6 +55,9 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		}
+	}
+	if he == middleware.ErrJWTMissing {
+		he.Code = http.StatusUnauthorized
 	}
 
 	if c.Request().Method == http.MethodHead {

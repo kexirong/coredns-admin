@@ -13,6 +13,17 @@
             </a-alert>
 
             <a-table :columns="columns" :bordered="false" :data="tableData" :pagination="pagination" :loading="loading">
+                <template #name-filter="{ filterValue, setFilterValue, handleFilterConfirm, handleFilterReset }">
+                    <div class="custom-filter">
+                        <a-space direction="vertical">
+                            <a-input :model-value="filterValue[0]" @input="(value) => setFilterValue([value])" />
+                            <div class="filter-footer">
+                                <a-button @click="handleFilterConfirm">搜索</a-button>
+                                <a-button @click="handleFilterReset">重置</a-button>
+                            </div>
+                        </a-space>
+                    </div>
+                </template>
                 <template #type="{ record }">
                     <a-select v-if="record.action == 'add'" :options="recordTypeOptions" v-model="record.type"
                         class="w-88px" />
@@ -52,11 +63,12 @@
     </a-row>
 </template>
 <script lang="ts" setup>
-import { ref, reactive } from 'vue';
+import { ref, h } from 'vue';
 import { getDomains, DomainsData, getRecord, getRecords, RecordData, postRecord, putRecord, deleteRecord } from '@/api/etcd'
 import type { TreeNodeData, TableData } from '@arco-design/web-vue/es'
 import { Message } from '@arco-design/web-vue'
 import { encodeURI } from 'js-base64'
+import SearchOutline from '@/assets/icons/SearchOutline.vue'
 const treeData = ref<TreeNodeData[]>([])
 const tableData = ref<TableData[]>([])
 const pagination = { showPageSize: true }
@@ -80,7 +92,12 @@ const columns = [
     {
         title: 'NAME',
         dataIndex: 'name',
-        slotName: 'name'
+        slotName: 'name',
+        filterable: {
+            filter: (value: string[], record: TableData) => record.name.includes(value),
+            slotName: 'name-filter',
+            icon: () => h(SearchOutline)
+        }
     },
     {
         title: 'CONTENT',

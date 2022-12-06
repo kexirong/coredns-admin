@@ -142,4 +142,17 @@ function MenuItems(props: Readonly<Props>, context: SetupContext) {
   background-color: var(--color-neutral-6);
   border-radius: 10px;
 }
+
+.custom-filter {
+  padding: 20px;
+  background: var(--color-bg-5);
+  border: 1px solid var(--color-neutral-3);
+  border-radius: var(--border-radius-medium);
+  box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
+
+  .filter-footer {
+    display: flex;
+    justify-content: space-between;
+  }
+}
 </style>
