@@ -51,7 +51,6 @@ const store = useMainStore()
 
 
 function handleUpdateValue(key: string) {
-  console.log(key)
   router.push({ name: key })
 }
 

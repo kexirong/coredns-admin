@@ -4,9 +4,9 @@ go 1.18
 
 require (
 	github.com/coredns/coredns v1.10.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/kexirong/coredns-redis v0.0.0-20221201040800-6c4a73a05a95
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/miekg/dns v1.1.50
@@ -33,7 +33,6 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

@@ -1,16 +1,24 @@
 <template>
     <a-row>
         <a-col :span="6">
-            <a-tree blockNode :data="treeData" :fieldNames="{ title: 'name', children: 'subdomain' }" size="large"
-                @select="onTreeSelect" />
+            <a-space direction="vertical">
+                <a-space>
+                    <a-input-number mode="button" :min="2" :max="8" :default-value="2" @change="loadTreeData" />
+                    <a-button type="text" status="success" shape="circle" @click="loadTreeData(2)">
+                        <Refresh class="arco-icon" />
+                    </a-button>
+                </a-space>
+                <a-tree blockNode :data="treeData" :fieldNames="{ title: 'name', children: 'subdomain' }" size="large"
+                    @select="onTreeSelect" />
+            </a-space>
         </a-col>
         <a-col :span="18">
             <a-button type="primary" class="mb-8px" @click="handleAdd"> 添加记录 </a-button>
-            <a-alert title="提示" closable class="mb-8px">
+            <!-- <a-alert title="提示" closable class="mb-8px">
                 <template v-for="(v, i) in description" :key="'desc' + i">
                     <span v-html="v" class="block" />
                 </template>
-            </a-alert>
+            </a-alert> -->
 
             <a-table :columns="columns" :bordered="false" :data="tableData" :pagination="pagination" :loading="loading">
                 <template #type="{ record }">
@@ -57,10 +65,13 @@ import { getDomains, DomainsData, getRecord, getRecords, RecordData, postRecord,
 import type { TreeNodeData, TableData } from '@arco-design/web-vue/es'
 import { Message } from '@arco-design/web-vue'
 import { encodeURI } from 'js-base64'
+import Refresh from '@/assets/icons/Refresh.vue'
+
 const treeData = ref<TreeNodeData[]>([])
 const tableData = ref<TableData[]>([])
 const pagination = { showPageSize: true }
 const loading = ref(true)
+const num = ref(2)
 const columns = [
     {
         title: 'TYPE',
@@ -115,13 +126,7 @@ function dataAddKey(data: DomainsData[], key: string) {
     }
     return data
 }
-getDomains()
-    .then(res => {
-        const subdomain = res.data.subdomain
-        if (subdomain) {
-            treeData.value = dataAddKey(subdomain, '')
-        }
-    })
+
 getRecords()
     .then(res => {
         tableData.value = res.data
@@ -164,8 +169,6 @@ function handleToEdit(record: RecordData) {
     }
 }
 function onRecordSave(record: RecordData) {
-    console.log(record)
-
     switch (record.action) {
         case 'edit':
             const key = encodeURI(<string>record.key)
@@ -191,7 +194,6 @@ function onRecordDelete(record: RecordData, rowIndex: number) {
     const key = encodeURI(record.key as string)
     postRecordSignature(record)
         .then((res) => {
-            console.log(res.data.fingerprint)
             deleteRecord(key, res.data.fingerprint)
                 .then(() => {
                     tableData.value.splice(rowIndex, 1)
@@ -199,9 +201,18 @@ function onRecordDelete(record: RecordData, rowIndex: number) {
                 })
         })
         .catch(() => Message.error('获取签名失败'))
-
 }
 
+function loadTreeData(value: number | undefined) {
+    getDomains(value as number)
+        .then(res => {
+            const subdomain = res.data.subdomain
+            if (subdomain) {
+                treeData.value = dataAddKey(subdomain, '')
+            }
+        })
+}
+loadTreeData(undefined)
 const description = [
     'Name需要填写完整域名（www.baidu.com）。Priority可选填写',
     'A: &emsp;&emsp;&emsp;&emsp;用于IPv4的A记录，Name填写域名，Content填写IP',

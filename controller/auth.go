@@ -2,13 +2,13 @@ package controller
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/kexirong/coredns-admin/config"
 	"github.com/kexirong/coredns-admin/middleware"
 	"github.com/labstack/echo/v4"
 )
-
-var jwt = middleware.NewJWT()
 
 func Login(c echo.Context) error {
 	var conf = config.Get()
@@ -20,9 +20,23 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"reason": "username or password is incorrect"})
 	}
 
-	token, err := jwt.CreateToken(middleware.CustomClaims{Username: username})
+	claims := &middleware.JWTCustomClaims{
+		Username: username,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	t, err := token.SignedString([]byte(middleware.SigningKey))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"reason": err.Error()})
 	}
-	return c.JSON(http.StatusOK, echo.Map{"access_token": token})
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"access_token": t,
+		"token_type":   "Bearer",
+	})
+
 }

@@ -1,8 +1,8 @@
-import { defineConfig, presetUno } from 'unocss';
+import { defineConfig, presetUno, presetIcons } from 'unocss';
 
 export default defineConfig({
   exclude: ['node_modules', 'dist', '.git', '.vscode', 'public'],
-  presets: [presetUno()],
+  presets: [presetUno(), presetIcons()],
   shortcuts: {
     'flex-x-center': 'flex justify-center',
     'flex-y-center': 'flex items-center',

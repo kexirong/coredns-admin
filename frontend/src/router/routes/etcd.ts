@@ -11,7 +11,7 @@ export const etcd: RouteRecordRaw = {
     component: DefaultLayout,
     meta: {
         locale: 'Etcd',
-        icon: 'Prometheus'
+        icon: 'Etcd'
     },
     children: [
       {
@@ -20,7 +20,7 @@ export const etcd: RouteRecordRaw = {
         component: () => import('@/views/etcd-domain/index.vue'),
         meta: {
             locale: 'Domains',
-            icon: 'Prometheus'
+            icon: 'Parse'
         },
       }
     ]

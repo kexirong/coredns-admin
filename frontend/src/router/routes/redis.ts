@@ -11,7 +11,7 @@ export const redis: RouteRecordRaw = {
     component: DefaultLayout,
     meta: {
         locale: 'Redis',
-        icon: 'Prometheus'
+        icon: 'Redis'
     },
     children: [
       {
@@ -20,7 +20,7 @@ export const redis: RouteRecordRaw = {
         component: () => import('@/views/redis-domain/index.vue'),
         meta: {
             locale: 'Domains',
-            icon: 'Prometheus'
+            icon: 'Parse'
         },
       }
     ]

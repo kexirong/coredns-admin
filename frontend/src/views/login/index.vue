@@ -48,7 +48,7 @@ interface Data {
     errors: Record<string, ValidatedError> | undefined
 }
 
-function handleSubmit({ values, errors }: Data, ev: Event): any {
+function handleSubmit({ values, errors }: Data): any {
     if (errors) return false;
 
     loading.value = true

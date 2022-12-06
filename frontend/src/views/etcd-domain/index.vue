@@ -152,8 +152,6 @@ function onTreeSelect(keys: (string | number)[]) {
         )
 }
 function onRecordSave(record: RecordData) {
-    console.log(record)
-
     switch (record.action) {
         case 'edit':
             const key = encodeURI(<string>record.key)

@@ -15,11 +15,11 @@ export interface RecordData {
     content: string
     key?: string
     action?: 'add' | 'edit'
-    fingerprint?:string
+    fingerprint?: string
 }
 
-export function getDomains() {
-    return axios.get<DomainsData>('/api/v1/redis/domains')
+export function getDomains(deep: number) {
+    return axios.get<DomainsData>('/api/v1/redis/domains', { params: { deep } })
 }
 
 export function getRecords() {

@@ -160,8 +160,14 @@ func (r redis) ToRecords(keyPrefix string) []*model.Record {
 
 	return rs
 }
+
 func RedisGetKeys(prefix string) ([]string, error) {
-	return service.RedisKeys(prefix + "*")
+	if strings.HasSuffix(prefix, "*") {
+		prefix = prefix[:len(prefix)-1] + "\\*"
+	} else {
+		prefix += "*"
+	}
+	return service.RedisKeys(prefix)
 }
 
 func RedisGetItems(keys []string) (rx []*redis, err error) {

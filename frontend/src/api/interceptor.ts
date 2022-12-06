@@ -15,7 +15,7 @@ axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL
 axios.interceptors.request.use(
     config => {
         const store = useMainStore()
-        console.log(store.token)
+
         if (store.token) {
             if (!config.headers) {
                 config.headers = {}

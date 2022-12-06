@@ -7,7 +7,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'Home',
-    redirect: '/etcd',
+    redirect: { name: 'RedisDomains' },
   },
   {
     path: '/login',

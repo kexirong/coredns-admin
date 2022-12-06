@@ -11,5 +11,5 @@ etcd:
     #tls: [cert,key,ca]
 redis:
     key_prefix: coredns
-    addresses: [192.168.0.165:6379]
+    addresses: [192.168.2.84:6379]
 

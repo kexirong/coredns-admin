@@ -48,6 +48,7 @@ func GetRecords(c echo.Context) error {
 func PostRecord(c echo.Context) error {
 	var rec = new(model.Record)
 	var conf = config.Get()
+
 	err := c.Bind(rec)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"reason": err.Error()})

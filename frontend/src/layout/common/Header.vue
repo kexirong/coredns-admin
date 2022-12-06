@@ -1,8 +1,9 @@
 <template>
     <div class="header-container flex-y-center h-full">
         <div class="w-240px flex-center text-primary">
-            <CrisisAlert class="arco-icon" />
-            <span class="font-600 ml-8px">CoreDNS Admin </span>
+            <!-- <Dns class="arco-icon" height="32" width="32" /> -->
+            <i class="i-entypo-address"/>
+            <span class="font-600 ml-8px text-size-24px">CoreDNS Admin </span>
         </div>
         <div class="flex-1 flex-y-center cursor-pointer">
             <div @click="store.collapsed = !store.collapsed">
@@ -14,7 +15,7 @@
             <dark-mode-switch v-model:dark="store.darkMode" class="w-40px flex-x-center" />
             <a-dropdown @select="handleDropdown" trigger="click">
                 <div class="flex-center px-12px cursor-pointer">
-                    <DefaultAvatar />
+                    <DefaultAvatar class="w-24px h-24px"/>
                     <span class="pl-8px text-18px font-500">{{ store.account }}</span>
                 </div>
                 <template #content>
@@ -34,7 +35,6 @@ import { useRouter } from 'vue-router'
 
 import DarkModeSwitch from '@/components/DarkModeSwitch.vue'
 
-import CrisisAlert from '@/assets/icons/CrisisAlert.vue'
 import DefaultAvatar from '@/assets/icons/DefaultAvatar.vue'
 import MenuFoldLeft from '@/assets/icons/MenuFoldLeft.vue'
 import MenuFoldRight from '@/assets/icons/MenuFoldRight.vue'
