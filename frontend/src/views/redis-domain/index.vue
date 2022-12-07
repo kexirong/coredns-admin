@@ -124,7 +124,7 @@ const recordTypeOptions = [
     { label: "PTR", value: "PTR" },
     { label: "MX", value: "MX" },
     { label: "TXT", value: "TXT" },
-    { label: "AAA", value: "AAA" },
+    { label: "AAAA", value: "AAAA" },
     { label: "SRV", value: "SRV" },
     { label: "CAA", value: "CAA" },
 ]
@@ -226,16 +226,6 @@ function loadTreeData(value: number | undefined) {
         })
 }
 loadTreeData(undefined)
-const description = [
-    'Name需要填写完整域名（www.baidu.com）。Priority可选填写',
-    'A: &emsp;&emsp;&emsp;&emsp;用于IPv4的A记录，Name填写域名，Content填写IP',
-    'NS: &emsp;&emsp;&emsp;',
-    'CNAME: Content填写别名的值',
-    'PTR: &emsp;&emsp;Name填写ip, 如127.0.0.1, Content填写域名',
-    'MX: &emsp;&emsp;&emsp;Content可直接填写ip也可填写域名+该域名的A记录',
-    'TXT: &emsp;&emsp;Content填写txt内容',
-    'AAA: &emsp;&emsp;用于IPv6的A记录',
-    'SRV: &emsp;&emsp;Content格式：weight port target/hostname, 如：10 8080 127.0.0.1/srv.baidu.com'
-]
+
 
 </script>

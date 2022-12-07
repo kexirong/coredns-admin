@@ -5,7 +5,8 @@
     </a-layout-header>
     <a-layout has-sider style="top: 56px;">
       <a-layout-sider :width="240" v-model:collapsed="store.collapsed" breakpoint="xl">
-        <a-menu :collapsed="store.collapsed" @menu-item-click="handleUpdateValue" breakpoint="xl">
+        <a-menu :collapsed="store.collapsed" @menu-item-click="handleUpdateValue" breakpoint="xl"
+          :default-open-keys="expandedKeys" :default-selected-keys="expandedKeys">
           <MenuItems :routes="routes" />
         </a-menu>
       </a-layout-sider>
@@ -39,13 +40,16 @@ import icons from '@/assets/icons'
 import { routes } from "@/router"
 
 
-// const expandedKeys: string[] = []
+const expandedKeys: string[] = []
 
 const router = useRouter()
 const route = useRoute()
 
-const active = ref<string | null>(null)
-active.value = route.name as string
+
+for (let i of route.matched) {
+  expandedKeys.push(i.name as string)
+}
+
 const store = useMainStore()
 
 
